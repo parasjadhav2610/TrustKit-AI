@@ -107,7 +107,6 @@ Potential tools:
 - Gemini Agents
 - Google AI SDK
 - Antigravity AI development tools
-- Cursor AI coding assistant
 
 ---
 
