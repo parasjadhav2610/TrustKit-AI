@@ -7,3 +7,4 @@ google-generativeai
 gTTS
 pillow
 python-dotenv
+google-cloud-texttospeech
