@@ -138,7 +138,7 @@ trustkit-ai/
 │       └── helpers.py
 ├── sample_videos/
 ├── docs/
-└── TRUSTKIT_HACKATHON_PLAN.md
+└── ARCHITECTURE.md
 
 ---
 
