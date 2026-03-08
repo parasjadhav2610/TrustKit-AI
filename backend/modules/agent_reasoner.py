@@ -53,8 +53,8 @@ def _get_model():
         return None
 
     try:
-        import vertexai
-        from vertexai.generative_models import GenerativeModel
+        import vertexai  # type: ignore[import]
+        from vertexai.generative_models import GenerativeModel  # type: ignore[import]
 
         vertexai.init(project=project, location=location)
         _model = GenerativeModel("gemini-2.5-flash")
@@ -201,43 +201,44 @@ def _rule_based_reason(
     Deducts points for known red-flag patterns in the vision data,
     listing claims, and metadata.
     """
-    score = 100
+    score: int = 100
     issues: list[str] = []
+    flags: list[str] = []
 
     # --- Suspicious elements from vision ---
     suspicious = vision_data.get("suspicious_elements", [])
     if suspicious:
-        deduction = min(40, len(suspicious) * 15)
-        score -= deduction
+        deduction: int = min(40, len(suspicious) * 15)
+        score = score - deduction
         issues.append(
             f"Vision AI flagged {len(suspicious)} suspicious element(s)."
         )
 
     # --- Listing claim vs vision mismatch ---
     if listing_claims:
-        claims_lower = listing_claims.lower()
-        observed_view = (vision_data.get("view") or "").lower()
+        claims_lower: str = listing_claims.lower()
+        observed_view: str = str(vision_data.get("view") or "").lower()
 
         # Check common view claims
         for keyword in ["park", "ocean", "garden", "river", "lake", "city"]:
             if keyword in claims_lower and observed_view and keyword not in observed_view:
-                score -= 25
+                score = score - 25  # type: ignore[operator]
                 issues.append(
                     f"Listing mentions '{keyword}' but camera shows '{observed_view}'."
                 )
                 break
 
         # Check room type claims
-        observed_room = (vision_data.get("room_type") or "").lower()
+        observed_room: str = str(vision_data.get("room_type") or "").lower()
         if observed_room in ("null", "unknown", ""):
-            score -= 20
+            score = score - 20  # type: ignore[operator]
             issues.append("Image does not appear to show a real property room.")
 
     # --- Metadata red flags (Deep Scan) ---
     if metadata:
-        suspicious: list[str] = metadata.get("suspicious_flags", [])
-        if isinstance(suspicious, list):
-            for flag_item in suspicious:
+        suspicious_flags: list[str] = metadata.get("suspicious_flags", [])
+        if isinstance(suspicious_flags, list):
+            for flag_item in suspicious_flags:
                 if flag_item == "edited_media":
                     score -= 15
                     issues.append("Media appears to have been edited with software.")
