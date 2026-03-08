@@ -7,3 +7,5 @@ google-cloud-aiplatform
 gTTS==2.5.4
 pillow==10.4.0
 python-dotenv==1.0.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
