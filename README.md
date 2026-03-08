@@ -86,5 +86,5 @@ trustkit-ai/
 │   │   └── tts_engine.py
 │   └── utils/
 │       └── helpers.py
-└── TRUSTKIT_HACKATHON_PLAN.md
+└── ARCHITECTURE.md
 ```
