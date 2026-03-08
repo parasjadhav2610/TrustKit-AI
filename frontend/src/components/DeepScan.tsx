@@ -30,11 +30,25 @@ interface Assessment {
     trust_score: number;
 }
 
+interface ListingComparison {
+    address: string;
+    price: string;
+    beds: string;
+    baths: string;
+    sqft: string;
+    description: string;
+    photo_count: number;
+    source: string;
+    comparison_summary: string;
+    error?: string;
+}
+
 interface ScanReport {
     filename: string;
     metadata: Metadata;
     vision_analysis: VisionResult[];
     assessment: Assessment;
+    listing_comparison?: ListingComparison;
 }
 
 interface ChatMessage {
@@ -51,6 +65,7 @@ function trustColor(score: number): string {
 
 export default function DeepScan() {
     const [file, setFile] = useState<File | null>(null);
+    const [address, setAddress] = useState("");
     const [report, setReport] = useState<ScanReport | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -140,6 +155,9 @@ export default function DeepScan() {
         try {
             const body = new FormData();
             body.append("file", file);
+            if (address.trim()) {
+                body.append("address", address.trim());
+            }
 
             const res = await fetch(API_URL, { method: "POST", body });
 
@@ -212,24 +230,38 @@ export default function DeepScan() {
             {/* ── Upload Form ────────────────────────────────────── */}
             <form
                 onSubmit={handleSubmit}
-                className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-700 bg-slate-800/50 p-5"
+                className="space-y-4 rounded-xl border border-slate-700 bg-slate-800/50 p-5"
             >
-                <label className="flex-1">
+                <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Property Address (optional — for Zillow comparison)
+                    </label>
                     <input
-                        type="file"
-                        accept="video/*"
-                        onChange={handleFileChange}
-                        className="block w-full text-sm text-slate-300 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-500"
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="e.g. 123 Main St, New York, NY 10001"
+                        className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
                     />
-                </label>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                    <label className="flex-1">
+                        <input
+                            type="file"
+                            accept="video/*"
+                            onChange={handleFileChange}
+                            className="block w-full text-sm text-slate-300 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-indigo-500"
+                        />
+                    </label>
 
-                <button
-                    type="submit"
-                    disabled={!file || loading}
-                    className="cursor-pointer rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                    {loading ? "Analysing…" : "Analyse"}
-                </button>
+                    <button
+                        type="submit"
+                        disabled={!file || loading}
+                        className="cursor-pointer rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        {loading ? "Analysing…" : "Analyse"}
+                    </button>
+                </div>
             </form>
 
             {error && (
@@ -370,6 +402,41 @@ export default function DeepScan() {
                             </button>
                         </form>
                     </div>
+
+                {/* ── Zillow Comparison Summary ───────────────────── */}
+                {report.listing_comparison && (
+                    <div className="lg:col-span-2 rounded-xl border border-slate-700 bg-slate-800/50 p-6 space-y-4">
+                        <h3 className="text-lg font-semibold text-white">📊 Zillow Listing Comparison</h3>
+                        
+                        {report.listing_comparison.error ? (
+                            <p className="text-sm text-amber-400">{report.listing_comparison.error}</p>
+                        ) : (
+                            <>
+                                <div className="grid gap-4 sm:grid-cols-4">
+                                    <InfoCard label="Address" value={report.listing_comparison.address} />
+                                    <InfoCard label="Price" value={report.listing_comparison.price} />
+                                    <InfoCard label="Beds / Baths" value={`${report.listing_comparison.beds} / ${report.listing_comparison.baths}`} />
+                                    <InfoCard label="Sqft" value={report.listing_comparison.sqft} />
+                                </div>
+                                
+                                <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-5">
+                                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                                        Forensic Comparison Summary
+                                    </h4>
+                                    <div className="space-y-1">
+                                        {report.listing_comparison.comparison_summary.split('\n').map((line, i) => (
+                                            <p key={i} className="text-sm text-slate-300 leading-relaxed">{line}</p>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <p className="text-xs text-slate-500">
+                                    Source: {report.listing_comparison.source} · {report.listing_comparison.photo_count} listing photos analyzed
+                                </p>
+                            </>
+                        )}
+                    </div>
+                )}
                 </div>
             )}
         </div>
