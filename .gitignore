@@ -30,3 +30,6 @@ Thumbs.db
 
 # Frontend
 frontend/.vite
+
+# GCP
+backend/gcp-key.json
