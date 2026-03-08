@@ -13,6 +13,7 @@ from modules.frame_extractor import extract_from_file
 from modules.metadata_analyzer import analyze as analyze_metadata
 from modules.vision_analyzer import analyze_frame
 from modules.agent_reasoner import reason
+from modules.tts_engine import generate_warning_audio
 
 router = APIRouter()
 
@@ -54,12 +55,18 @@ async def deep_scan(file: UploadFile = File(...)):
             vision_data=vision_results[0] if vision_results else {},
             metadata=metadata,
         )
+        
+        # --- Audio Pipeline ---
+        audio_data = None
+        if assessment.get("alert"):
+            audio_data = generate_warning_audio(assessment)
 
         return {
             "filename": file.filename,
             "metadata": metadata,
             "vision_analysis": vision_results,
             "assessment": assessment,
+            "audio_data": audio_data
         }
     finally:
         # Clean up temp file
