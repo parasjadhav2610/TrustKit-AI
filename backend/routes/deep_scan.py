@@ -10,7 +10,13 @@ import os
 import tempfile
 
 from fastapi import APIRouter, File, Form, UploadFile
-de
+
+from modules.frame_extractor import extract_from_file
+from modules.metadata_analyzer import analyze_live_frame
+from modules.vision_analyzer import analyze_frame
+from modules.agent_reasoner import evaluate_trust
+from modules.tts_engine import generate_warning_audio
+
 router = APIRouter()
 
 
@@ -177,8 +183,7 @@ async def deep_scan(
         print(f"[deep-scan] Assessment: score={assessment.get('trust_score')}, "
               f"alert={assessment.get('alert')}")
 
-        return {
-
+        result = {
             "filename": file.filename,
             "listing_claims": listing_claims,
             "forensics": forensics_results,

@@ -91,7 +91,7 @@ export default function DeepScan() {
     const [report, setReport] = useState<ScanReport | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
+
     // --- Chat State ---
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
     const [chatInput, setChatInput] = useState("");
@@ -124,7 +124,7 @@ export default function DeepScan() {
                     .join('');
                 setChatInput(transcript);
             };
-            
+
             recognitionRef.current = recognition;
         }
     }, []);
@@ -134,7 +134,7 @@ export default function DeepScan() {
             alert("Your browser does not support Speech Recognition.");
             return;
         }
-        
+
         if (isListening) {
             recognitionRef.current.stop();
         } else {
@@ -171,12 +171,12 @@ export default function DeepScan() {
         e.preventDefault();
         const ws = wsRef.current;
         if (!ws || chatInput.trim() === "") return;
-        
+
         if (isListening) recognitionRef.current?.stop();
 
         // Push user message to UI immediately
         setChatHistory((prev) => [...prev, { role: "user", text: chatInput }]);
-        
+
         ws.send(JSON.stringify({ text: chatInput }));
         setChatInput("");
     };
@@ -276,12 +276,12 @@ export default function DeepScan() {
 
             const data: ScanReport = await res.json();
             setReport(data);
-            
+
             // --- CONNECT WEBSOCKET CHAT POST-ANALYSIS ---
             setChatStatus("Connecting...");
             const ws = new WebSocket(WS_URL);
             wsRef.current = ws;
-            
+
             ws.onopen = () => {
                 setChatStatus("Connected");
                 // Immediately send the context so the backend can initialize the Gemini prompt
@@ -290,7 +290,7 @@ export default function DeepScan() {
                     context: data
                 }));
             };
-            
+
             ws.onmessage = (event) => {
                 try {
                     const wsData = JSON.parse(event.data);
@@ -300,7 +300,7 @@ export default function DeepScan() {
                             text: wsData.message,
                             audioBase64: wsData.audio_data
                         }]);
-                        
+
                         // Automatically play the incoming audio response
                         if (wsData.audio_data) {
                             const audio = new Audio(wsData.audio_data);
@@ -313,10 +313,10 @@ export default function DeepScan() {
                     console.warn("Failed to parse WS chat message", event.data);
                 }
             };
-            
+
             ws.onerror = () => setChatStatus("WebSocket Error");
             ws.onclose = () => setChatStatus("Disconnected");
-            
+
         } catch (err) {
             clearInterval(progressInterval);
             if (err instanceof DOMException && err.name === "AbortError") {
@@ -331,7 +331,7 @@ export default function DeepScan() {
             abortRef.current = null;
         }
     };
-    
+
     // Cleanup WebSocket on unmount
     useEffect(() => {
         return () => wsRef.current?.close();
@@ -503,8 +503,8 @@ export default function DeepScan() {
                             <span className="text-sm text-slate-200">
                                 {report.assessment.message}
                             </span>
-
                         </div>
+                    )}
 
                     {/* Forensics results */}
                     {report.forensics.length > 0 && (
@@ -577,72 +577,93 @@ export default function DeepScan() {
                 </div>
             )}
 
-                        </div>
-                        
-                        <form onSubmit={handleChatSubmit} className="flex gap-2">
-                            <input
-                                type="text"
-                                value={chatInput}
-                                onChange={(e) => setChatInput(e.target.value)}
-                                placeholder={isListening ? "Listening..." : "Ask about the property..."}
-                                disabled={chatStatus !== "Connected"}
-                                className="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none disabled:opacity-50"
-                            />
-                            <button
-                                type="button"
-                                onClick={toggleListening}
-                                disabled={chatStatus !== "Connected"}
-                                className={`flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                                    isListening ? 'bg-red-500 text-white hover:bg-red-400 animate-pulse' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                } disabled:opacity-50`}
-                                title="Use voice input"
-                            >
-                                {isListening ? "⏹" : "🎤"}
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={chatStatus !== "Connected" || !chatInput.trim()}
-                                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-                            >
-                                Send
-                            </button>
-                        </form>
+            {/* ── Chat UI ──────────────────────────────────────── */}
+            {report && (
+                <div className="flex flex-col rounded-xl border border-slate-700 bg-slate-800/50 p-6">
+                    <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-white">TrustKit AI Copilot</h3>
+                        <p className="text-xs text-slate-400">Status: {chatStatus}</p>
                     </div>
 
-                {/* ── Zillow Comparison Summary ───────────────────── */}
-                {report.listing_comparison && (
-                    <div className="lg:col-span-2 rounded-xl border border-slate-700 bg-slate-800/50 p-6 space-y-4">
-                        <h3 className="text-lg font-semibold text-white">📊 Zillow Listing Comparison</h3>
-                        
-                        {report.listing_comparison.error ? (
-                            <p className="text-sm text-amber-400">{report.listing_comparison.error}</p>
+                    <div className="flex-1 overflow-y-auto space-y-4 mb-4" style={{ minHeight: "300px" }}>
+                        {chatHistory.length === 0 ? (
+                            <p className="text-sm text-slate-500 italic text-center mt-10">Ask a question about the analysis!</p>
                         ) : (
-                            <>
-                                <div className="grid gap-4 sm:grid-cols-4">
-                                    <InfoCard label="Address" value={report.listing_comparison.address} />
-                                    <InfoCard label="Price" value={report.listing_comparison.price} />
-                                    <InfoCard label="Beds / Baths" value={`${report.listing_comparison.beds} / ${report.listing_comparison.baths}`} />
-                                    <InfoCard label="Sqft" value={report.listing_comparison.sqft} />
-                                </div>
-                                
-                                <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-5">
-                                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
-                                        Forensic Comparison Summary
-                                    </h4>
-                                    <div className="space-y-1">
-                                        {report.listing_comparison.comparison_summary.split('\n').map((line, i) => (
-                                            <p key={i} className="text-sm text-slate-300 leading-relaxed">{line}</p>
-                                        ))}
+                            chatHistory.map((msg, i) => (
+                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[80%] rounded-xl px-4 py-2 ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-200'}`}>
+                                        <p className="text-sm">{msg.text}</p>
+                                        {msg.audioBase64 && (
+                                            <audio controls src={msg.audioBase64} className="mt-2 h-8 w-full block max-w-[200px]" />
+                                        )}
                                     </div>
                                 </div>
-                                
-                                <p className="text-xs text-slate-500">
-                                    Source: {report.listing_comparison.source} · {report.listing_comparison.photo_count} listing photos analyzed
-                                </p>
-                            </>
+                            ))
                         )}
                     </div>
-                )}
+
+                    <form onSubmit={handleChatSubmit} className="flex gap-2">
+                        <input
+                            type="text"
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            placeholder={isListening ? "Listening..." : "Ask about the property..."}
+                            disabled={chatStatus !== "Connected"}
+                            className="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+                        />
+                        <button
+                            type="button"
+                            onClick={toggleListening}
+                            disabled={chatStatus !== "Connected"}
+                            className={`flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition ${isListening ? 'bg-red-500 text-white hover:bg-red-400 animate-pulse' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                                } disabled:opacity-50`}
+                            title="Use voice input"
+                        >
+                            {isListening ? "⏹" : "🎤"}
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={chatStatus !== "Connected" || !chatInput.trim()}
+                            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                        >
+                            Send
+                        </button>
+                    </form>
+                </div>
+            )}
+
+            {/* ── Zillow Comparison Summary ───────────────────── */}
+            {report && report.listing_comparison && (
+                <div className="lg:col-span-2 rounded-xl border border-slate-700 bg-slate-800/50 p-6 space-y-4">
+                    <h3 className="text-lg font-semibold text-white">📊 Zillow Listing Comparison</h3>
+
+                    {report.listing_comparison.error ? (
+                        <p className="text-sm text-amber-400">{report.listing_comparison.error}</p>
+                    ) : (
+                        <>
+                            <div className="grid gap-4 sm:grid-cols-4">
+                                <InfoCard label="Address" value={report.listing_comparison.address} />
+                                <InfoCard label="Price" value={report.listing_comparison.price} />
+                                <InfoCard label="Beds / Baths" value={`${report.listing_comparison.beds} / ${report.listing_comparison.baths}`} />
+                                <InfoCard label="Sqft" value={report.listing_comparison.sqft} />
+                            </div>
+
+                            <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-5">
+                                <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                                    Forensic Comparison Summary
+                                </h4>
+                                <div className="space-y-1">
+                                    {report.listing_comparison.comparison_summary.split('\n').map((line, i) => (
+                                        <p key={i} className="text-sm text-slate-300 leading-relaxed">{line}</p>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-slate-500">
+                                Source: {report.listing_comparison.source} · {report.listing_comparison.photo_count} listing photos analyzed
+                            </p>
+                        </>
+                    )}
                 </div>
             )}
         </div>

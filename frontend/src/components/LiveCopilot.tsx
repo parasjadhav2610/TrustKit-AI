@@ -100,6 +100,10 @@ export default function LiveCopilot() {
             ws.onmessage = (event) => {
                 try {
                     const data: Alert = JSON.parse(event.data);
+
+                    // Filter out fallback alerts from polluting the UI
+                    if (data.message === "Analyzing next frame...") return;
+
                     setAlerts((prev) => [data, ...prev]);
                     setTrustScore(data.trust_score);
                 } catch {
