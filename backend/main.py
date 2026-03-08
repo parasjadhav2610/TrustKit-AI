@@ -13,9 +13,11 @@ import traceback
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
+from routes.deep_scan import router as deep_scan_router
 from modules.vision_analyzer import analyze_frame
 from modules.metadata_analyzer import analyze_live_frame
 from modules.agent_reasoner import evaluate_trust
+from modules.listing_scraper import scrape_zillow_listing
 
 # ---------------------------------------------------------------------------
 # App initialisation
@@ -41,6 +43,14 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
+# REST routers
+# ---------------------------------------------------------------------------
+
+app.include_router(deep_scan_router)
+
+
+
+# ---------------------------------------------------------------------------
 # Safe fallback — sent when any per-frame processing fails
 # ---------------------------------------------------------------------------
 
@@ -50,9 +60,6 @@ _FALLBACK_ALERT = {
     "trust_score": 50,
 }
 
-# Mock listing claim for the demo. In a future iteration the frontend
-# will send this via an initial JSON message over the WebSocket.
-_DEMO_LISTING_CLAIMS = "Luxury 2-bedroom apartment with park view"
 
 # ---------------------------------------------------------------------------
 # WebSocket — Live Copilot
@@ -81,23 +88,76 @@ async def live_copilot(websocket: WebSocket):
           so they do not block the async event loop.
     """
     await websocket.accept()
-    print("[ws/live] Client connected")
+    print("[ws/live] ✅ Client connected")
+
+    frame_count = 0
+    listing_claims = ""
 
     try:
+        # ── Wait for the config message (first message is JSON text) ──
+        config_raw = await websocket.receive_text()
+        try:
+            config = json.loads(config_raw)
+            address = config.get("listing_address", "").strip()
+            description = config.get("listing_description", "").strip()
+
+            # Auto-scrape Zillow if address is provided
+            if address:
+                print(f"[ws/live] 🔍 Auto-scraping Zillow for: {address}")
+                scraped = await asyncio.to_thread(scrape_zillow_listing, address)
+                if scraped.get("found") and scraped.get("description"):
+                    scraped_parts = []
+                    if scraped.get("price", "N/A") != "N/A":
+                        scraped_parts.append(f"Price: {scraped['price']}")
+                    if scraped.get("bedrooms", "N/A") != "N/A":
+                        scraped_parts.append(f"{scraped['bedrooms']} bed")
+                    if scraped.get("bathrooms", "N/A") != "N/A":
+                        scraped_parts.append(f"{scraped['bathrooms']} bath")
+                    if scraped.get("sqft", "N/A") != "N/A":
+                        scraped_parts.append(f"{scraped['sqft']} sqft")
+                    scraped_header = " · ".join(scraped_parts) + ". " if scraped_parts else ""
+                    scraped_desc = scraped_header + scraped["description"]
+                    # Append scraped data to user-provided description
+                    description = (description + " " + scraped_desc).strip() if description else scraped_desc
+                    print(f"[ws/live] ✓ Zillow data found, enriched listing claims")
+                else:
+                    print(f"[ws/live] ⚠️  Zillow scrape failed: {scraped.get('error', 'unknown')}")
+
+            parts = []
+            if address:
+                parts.append(f"Address: {address}")
+            if description:
+                parts.append(description)
+
+            listing_claims = ". ".join(parts) if parts else ""
+            print(f"[ws/live] 📋 Listing claims: {listing_claims or '(none provided)'}")
+        except json.JSONDecodeError:
+            print("[ws/live] ⚠️  First message was not valid JSON config, proceeding without claims")
+
         while True:
             # ── 1. Receive binary JPEG frame ──────────────────────
             frame_bytes = await websocket.receive_bytes()
+            frame_count += 1
+            print(f"\n[ws/live] ── Frame #{frame_count} ({len(frame_bytes)} bytes) ──")
 
             try:
                 # ── 2. OpenCV forensics (sync → thread pool) ─────
+                print(f"[ws/live]   → Running OpenCV forensics...")
                 forensics = await asyncio.to_thread(
                     analyze_live_frame, frame_bytes
                 )
+                print(f"[ws/live]   ✓ Forensics: blur={forensics.get('blur_score')}, "
+                      f"brightness={forensics.get('brightness')}, "
+                      f"flags={forensics.get('suspicious_flags')}")
 
                 # ── 3. Vertex AI Vision (sync → thread pool) ─────
+                print(f"[ws/live]   → Running Vertex AI Vision...")
                 vision_data = await asyncio.to_thread(
                     analyze_frame, frame_bytes
                 )
+                print(f"[ws/live]   ✓ Vision: room={vision_data.get('room_type')}, "
+                      f"view={vision_data.get('view')}, "
+                      f"condition={vision_data.get('condition')}")
 
                 # ── 4. Combine forensic flags + vision data ──────
                 combined_payload = {
@@ -117,25 +177,31 @@ async def live_copilot(websocket: WebSocket):
                 )
 
                 # ── 5. Agent Reasoner (sync → thread pool) ───────
+                print(f"[ws/live]   → Running Agent Reasoner...")
                 alert = await asyncio.to_thread(
                     evaluate_trust,
                     combined_payload,
-                    _DEMO_LISTING_CLAIMS,
+                    listing_claims,
                 )
+                print(f"[ws/live]   ✓ Result: alert={alert.get('alert')}, "
+                      f"score={alert.get('trust_score')}, "
+                      f"msg={alert.get('message')}")
 
                 # ── 6. Send result back to frontend ──────────────
                 await websocket.send_json(alert)
+                print(f"[ws/live]   ✓ Sent to frontend")
 
             except Exception as frame_exc:
                 # Per-frame error — do NOT close the WebSocket
-                print(f"[ws/live] Frame error: {frame_exc}")
+                print(f"[ws/live]   ❌ Frame #{frame_count} error: {frame_exc}")
                 traceback.print_exc()
                 await websocket.send_json(_FALLBACK_ALERT)
+                print(f"[ws/live]   → Sent fallback JSON, continuing...")
 
     except WebSocketDisconnect:
-        print("[ws/live] Client disconnected")
+        print(f"[ws/live] Client disconnected after {frame_count} frames")
     except Exception as exc:
-        print(f"[ws/live] Unexpected error: {exc}")
+        print(f"[ws/live] ❌ Unexpected error: {exc}")
         traceback.print_exc()
 
 
