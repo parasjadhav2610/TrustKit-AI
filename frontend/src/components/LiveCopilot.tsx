@@ -3,8 +3,9 @@
  *
  * 1. Requests webcam access via getUserMedia.
  * 2. Displays the live feed in a <video> element.
- * 3. Captures frames on a hidden <canvas> and sends them as base64
- *    over a WebSocket to ws://localhost:8000/ws/live.
+ * 3. Captures JPEG frames on a hidden <canvas> and sends them as
+ *    binary Blobs over a WebSocket to ws://localhost:8000/ws/live
+ *    at exactly 1 frame per second.
  * 4. Receives alert JSON from the backend and passes them to AlertPanel.
  */
 
@@ -12,7 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import AlertPanel, { type Alert } from "./AlertPanel";
 
 const WS_URL = "ws://localhost:8000/ws/live";
-const FRAME_INTERVAL_MS = 1000; // send one frame per second
+const FRAME_INTERVAL_MS = 1000; // 1 FPS — keeps within Vertex AI rate limits
 
 export default function LiveCopilot() {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -26,23 +27,33 @@ export default function LiveCopilot() {
     const [trustScore, setTrustScore] = useState<number | null>(null);
     const [status, setStatus] = useState<string>("Idle");
 
-    // ── Capture a frame from the video → base64 string ───────────
-    const captureFrame = useCallback((): string | null => {
+    // ── Capture a frame from the video → binary Blob ──────────────
+    const captureAndSend = useCallback((ws: WebSocket) => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
-        if (!video || !canvas) return null;
+        if (!video || !canvas) return;
+        if (ws.readyState !== WebSocket.OPEN) return;
 
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext("2d");
-        if (!ctx) return null;
+        if (!ctx) return;
 
         ctx.drawImage(video, 0, 0);
-        // Return the raw base64 payload (strip the data-url prefix)
-        return canvas.toDataURL("image/jpeg", 0.6).split(",")[1];
+
+        // Convert canvas to JPEG Blob and send as binary
+        canvas.toBlob(
+            (blob) => {
+                if (blob && ws.readyState === WebSocket.OPEN) {
+                    ws.send(blob);
+                }
+            },
+            "image/jpeg",
+            0.6 // quality — keeps frame size <50 KB
+        );
     }, []);
 
-    // ── Start pipeline ───────────────────────────────────────────
+    // ── Start pipeline ────────────────────────────────────────────
     const start = useCallback(async () => {
         try {
             setStatus("Requesting camera…");
@@ -59,18 +70,16 @@ export default function LiveCopilot() {
             // Open WebSocket
             setStatus("Connecting to backend…");
             const ws = new WebSocket(WS_URL);
+            ws.binaryType = "arraybuffer"; // not strictly needed for send, but explicit
             wsRef.current = ws;
 
             ws.onopen = () => {
                 setStatus("Live — analysing frames");
                 setRunning(true);
 
-                // Start frame capture loop
+                // Start frame capture loop — exactly 1 FPS
                 intervalRef.current = window.setInterval(() => {
-                    const frame = captureFrame();
-                    if (frame && ws.readyState === WebSocket.OPEN) {
-                        ws.send(frame);
-                    }
+                    captureAndSend(ws);
                 }, FRAME_INTERVAL_MS);
             };
 
@@ -85,14 +94,23 @@ export default function LiveCopilot() {
             };
 
             ws.onerror = () => setStatus("WebSocket error");
-            ws.onclose = () => setStatus("Disconnected");
+            ws.onclose = () => {
+                setStatus("Disconnected");
+                setRunning(false);
+
+                // Stop the interval if WS closes unexpectedly
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                }
+            };
         } catch (err) {
             console.error(err);
             setStatus("Camera access denied");
         }
-    }, [captureFrame]);
+    }, [captureAndSend]);
 
-    // ── Stop pipeline ────────────────────────────────────────────
+    // ── Stop pipeline ─────────────────────────────────────────────
     const stop = useCallback(() => {
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
