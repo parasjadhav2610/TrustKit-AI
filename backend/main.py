@@ -185,11 +185,85 @@ async def live_copilot(websocket: WebSocket):
         print(f"[ws/live] Unexpected error: {exc}")
         traceback.print_exc()
 
+@app.websocket("/ws/chat")
+async def deepscan_chat(websocket: WebSocket):
+    """Dedicated WebSocket endpoint for DeepScan post-analysis two-way chat.
+    
+    Flow:
+        1. DeepScan completes the POST analysis.
+        2. Frontend opens this websocket and sends a JSON payload:
+           {"type": "init", "context": <assessment_dict>}
+        3. Backend initializes a conversational session with that context.
+        4. User sends subsequent text queries: {"text": "What about the view?"}
+        5. Backend responds with the text phrase and audio output.
+    """
+    await websocket.accept()
+    print("[ws/chat] Client connected")
+    
+    # Context state
+    session_context = {}
+    chat_history = []
+    
+    try:
+        while websocket.client_state == WebSocketState.CONNECTED:
+            message = await websocket.receive_text()
+            
+            try:
+                payload = json.loads(message)
+                
+                if payload.get("type") == "init":
+                    # Initial connection payload containing the full report context
+                    session_context = payload.get("context", {})
+                    chat_history.append({"role": "system", "content": f"Tour context: {json.dumps(session_context)}"})
+                    await websocket.send_json({"type": "system", "message": "Chat session initialized."})
+                    
+                elif "text" in payload:
+                    user_message = payload["text"]
+                    
+                    if user_message:
+                        # Append to our local history for Context (if we were using a full ChatSession we'd pass it here)
+                        # Instead, we rebuild the whole string so the _generate_chat_response sees the history
+                        chat_history.append({"role": "user", "content": user_message})
+                        
+                        # Build a mock conversational prompt out of the history
+                        history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in chat_history])
+                        
+                        from modules.tts_engine import generate_chat_response, generate_warning_audio
+                        text_response = await asyncio.to_thread(
+                            generate_chat_response, history_text, session_context
+                        )
+                        
+                        # Keep history
+                        chat_history.append({"role": "agent", "content": text_response})
+                        
+                        # Convert to speech
+                        audio_base64 = await asyncio.to_thread(
+                            generate_warning_audio, text_response
+                        )
+                        
+                        response_payload = {
+                            "type": "chat_reply",
+                            "message": text_response,
+                            "audio_data": audio_base64
+                        }
+                        await websocket.send_json(response_payload)
+                        
+            except json.JSONDecodeError:
+                print("[ws/chat] Received invalid JSON.")
+                
+    except WebSocketDisconnect:
+        print("[ws/chat] Client disconnected")
+    except Exception as exc:
+        print(f"[ws/chat] Unexpected error: {exc}")
+        traceback.print_exc()
+
 
 # ---------------------------------------------------------------------------
-# Health check
+# Health check & REST Routes
 # ---------------------------------------------------------------------------
 
+from routes.deep_scan import router as deep_scan_router
+app.include_router(deep_scan_router)
 
 @app.get("/health")
 async def health_check():

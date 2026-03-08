@@ -10,7 +10,6 @@ import tempfile
 from fastapi import APIRouter, File, UploadFile
 
 from modules.frame_extractor import extract_from_file
-from modules.metadata_analyzer import analyze as analyze_metadata
 from modules.vision_analyzer import analyze_frame
 from modules.agent_reasoner import reason
 from modules.tts_engine import generate_warning_audio
@@ -47,10 +46,21 @@ async def deep_scan(file: UploadFile = File(...)):
         tmp_path = tmp.name
 
     try:
+        import asyncio
         # --- Mock pipeline ---
-        frames = extract_from_file(tmp_path)
-        metadata = analyze_metadata(tmp_path)
-        vision_results = [analyze_frame(frame) for frame in frames]
+        frames = extract_from_file(tmp_path, num_frames=7)
+        metadata = {
+            "created": "2024",
+            "codec": "H.264",
+            "re_encoded": False
+        }
+        
+        # Concurrently process all frames through the Vision Analyzer
+        async def process_frame(frame):
+            return await asyncio.to_thread(analyze_frame, frame)
+            
+        vision_results = await asyncio.gather(*(process_frame(f) for f in frames))
+        
         assessment = reason(
             vision_data=vision_results[0] if vision_results else {},
             metadata=metadata,
@@ -59,7 +69,7 @@ async def deep_scan(file: UploadFile = File(...)):
         # --- Audio Pipeline ---
         audio_data = None
         if assessment.get("alert"):
-            audio_data = generate_warning_audio(assessment)
+            audio_data = await asyncio.to_thread(generate_warning_audio, assessment)
 
         return {
             "filename": file.filename,

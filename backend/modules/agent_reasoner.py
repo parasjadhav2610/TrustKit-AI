@@ -61,7 +61,20 @@ def _get_model():
         print(f"[agent_reasoner] Vertex AI initialised (project={project}, location={location})")
         return _model
     except Exception as exc:
-        print(f"[agent_reasoner] Vertex AI init failed: {exc}")
+        print(f"[agent_reasoner] Vertex AI init failed: {exc}. Attempting google.generativeai fallback...")
+        try:
+            import google.generativeai as genai
+            api_key = os.getenv("GEMINI_API_KEY")
+            if api_key:
+                genai.configure(api_key=api_key)
+                _model = genai.GenerativeModel("gemini-2.5-flash")
+                _initialised = True
+                print("[agent_reasoner] Google Generative AI initialised via API Key.")
+                return _model
+        except Exception as exc2:
+            print(f"[agent_reasoner] Google Generative AI init failed: {exc2}")
+            
+        print("[agent_reasoner] All model initializations failed. Using rule-based fallback.")
         _initialised = True
         return None
 
