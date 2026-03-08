@@ -105,8 +105,8 @@ class AgentReasoner:
             return "No suspicious indicators detected."
 
         return (
-            f"{len(flags)} potential issues detected. "
-            f"Overall risk level: {risk_level}."
+            f"I detected {len(flags)} potential concerns in the media. "
+            f"Based on metadata and visual inspection, the overall risk level is {risk_level}."
         )
 
 
