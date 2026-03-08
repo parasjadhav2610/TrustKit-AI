@@ -1,7 +1,7 @@
 """TrustKit AI — Deep Scan REST Endpoint.
 
 Provides the POST /deep-scan route for forensic analysis of
-prerecorded property tour videos.
+prerecorded property tour videos, with optional Zillow listing comparison.
 """
 
 import asyncio
@@ -10,12 +10,7 @@ import os
 import tempfile
 
 from fastapi import APIRouter, File, Form, UploadFile
-
-from modules.frame_extractor import extract_from_file
-from modules.metadata_analyzer import analyze_live_frame
-from modules.vision_analyzer import analyze_frame
-from modules.agent_reasoner import evaluate_trust
-
+de
 router = APIRouter()
 
 
@@ -24,6 +19,7 @@ async def deep_scan(
     file: UploadFile = File(...),
     listing_address: str = Form(""),
     listing_description: str = Form(""),
+
 ):
     """Run forensic Deep Scan analysis on an uploaded video.
 
@@ -44,7 +40,7 @@ async def deep_scan(
         dict: A JSON forensic report containing forensics analysis,
               vision analysis of extracted frames, and an overall
               trust assessment from the agent reasoner.
-    """
+"""
 
     # Build listing claims string from user input
     address = listing_address.strip()
@@ -131,16 +127,71 @@ async def deep_scan(
             listing_claims,
         )
 
+        
+        
+        # --- Audio Pipeline ---
+        audio_data = None
+        if assessment.get("alert"):
+            audio_data = await asyncio.to_thread(generate_warning_audio, assessment)
+
+        # --- Zillow Comparison Pipeline (if address provided) ---
+        listing_comparison = None
+        listing_data = None
+        
+        if address and address.strip():
+            try:
+                from modules.zillow_scraper import search_by_address
+                from modules.listing_comparator import compare_video_vs_listing
+                
+                # Scrape Zillow listing
+                listing_data = await asyncio.to_thread(search_by_address, address.strip())
+                
+                # Compare if we have photos from both sources
+                listing_photos = listing_data.get("photos_bytes", [])
+                
+                comparison_summary = await asyncio.to_thread(
+                    compare_video_vs_listing,
+                    frames[:3],  # first 3 video frames
+                    listing_photos,  # listing photos
+                    listing_data,  # listing details
+                )
+                
+                listing_comparison = {
+                    "address": listing_data.get("address", address),
+                    "price": listing_data.get("price", "N/A"),
+                    "beds": listing_data.get("beds", "N/A"),
+                    "baths": listing_data.get("baths", "N/A"),
+                    "sqft": listing_data.get("sqft", "N/A"),
+                    "description": listing_data.get("description", ""),
+                    "photo_count": len(listing_data.get("photo_urls", [])),
+                    "source": listing_data.get("source", "unknown"),
+                    "comparison_summary": comparison_summary,
+                }
+            except Exception as e:
+                print(f"[deep_scan] Zillow comparison failed: {e}")
+                listing_comparison = {
+                    "error": str(e),
+                    "comparison_summary": "Zillow comparison was unavailable. Please try again.",
+                }
+
         print(f"[deep-scan] Assessment: score={assessment.get('trust_score')}, "
               f"alert={assessment.get('alert')}")
 
         return {
+
             "filename": file.filename,
             "listing_claims": listing_claims,
             "forensics": forensics_results,
             "vision_analysis": vision_results,
             "assessment": assessment,
+            "audio_data": audio_data,
         }
+        
+        if listing_comparison:
+            result["listing_comparison"] = listing_comparison
+            
+        return result
+        
     finally:
         # Clean up temp file
         if os.path.exists(tmp_path):

@@ -33,3 +33,4 @@ frontend/.vite
 
 # GCP
 backend/gcp-key.json
+gcp-key.json

@@ -8,9 +8,11 @@
  * - Forensic + AI analysis report
  */
 
-import { useState, useRef, type ChangeEvent, type FormEvent, type DragEvent } from "react";
+import { useState, useRef, useEffect, type ChangeEvent, type FormEvent, type DragEvent } from "react";
+
 
 const API_URL = "http://localhost:8000/deep-scan";
+const WS_URL = "ws://localhost:8000/ws/chat";
 
 interface Forensics {
     blur_score: number;
@@ -33,12 +35,32 @@ interface Assessment {
     trust_score: number;
 }
 
+interface ListingComparison {
+    address: string;
+    price: string;
+    beds: string;
+    baths: string;
+    sqft: string;
+    description: string;
+    photo_count: number;
+    source: string;
+    comparison_summary: string;
+    error?: string;
+}
+
 interface ScanReport {
     filename: string;
     listing_claims: string;
     forensics: Forensics[];
     vision_analysis: VisionResult[];
     assessment: Assessment;
+    listing_comparison?: ListingComparison;
+}
+
+interface ChatMessage {
+    role: "user" | "agent";
+    text: string;
+    audioBase64?: string;
 }
 
 function trustColor(score: number): string {
@@ -65,9 +87,60 @@ const PROGRESS_STAGES = [
 
 export default function DeepScan() {
     const [file, setFile] = useState<File | null>(null);
+    const [address, setAddress] = useState("");
     const [report, setReport] = useState<ScanReport | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    
+    // --- Chat State ---
+    const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+    const [chatInput, setChatInput] = useState("");
+    const [chatStatus, setChatStatus] = useState("Disconnected");
+    const wsRef = useRef<WebSocket | null>(null);
+
+    // --- Voice Recognition State ---
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef<any>(null);
+
+    useEffect(() => {
+        // Initialize SpeechRecognition once
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => setIsListening(true);
+            recognition.onend = () => setIsListening(false);
+            recognition.onerror = (e: any) => {
+                console.error("Speech recognition error", e);
+                setIsListening(false);
+            };
+
+            recognition.onresult = (event: any) => {
+                const transcript = Array.from(event.results)
+                    .map((result: any) => result[0].transcript)
+                    .join('');
+                setChatInput(transcript);
+            };
+            
+            recognitionRef.current = recognition;
+        }
+    }, []);
+
+    const toggleListening = () => {
+        if (!recognitionRef.current) {
+            alert("Your browser does not support Speech Recognition.");
+            return;
+        }
+        
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            recognitionRef.current.start();
+        }
+    };
 
     // Listing details
     const [listingAddress, setListingAddress] = useState("");
@@ -89,6 +162,23 @@ export default function DeepScan() {
         setFile(selectedFile);
         setReport(null);
         setError(null);
+        setChatHistory([]); // Clear past chat history
+        wsRef.current?.close(); // Close any old websocket
+        if (isListening) recognitionRef.current?.stop();
+    };
+
+    const handleChatSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        const ws = wsRef.current;
+        if (!ws || chatInput.trim() === "") return;
+        
+        if (isListening) recognitionRef.current?.stop();
+
+        // Push user message to UI immediately
+        setChatHistory((prev) => [...prev, { role: "user", text: chatInput }]);
+        
+        ws.send(JSON.stringify({ text: chatInput }));
+        setChatInput("");
     };
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -160,6 +250,7 @@ export default function DeepScan() {
 
         const progressInterval = simulateProgress();
 
+
         try {
             const body = new FormData();
             body.append("file", file);
@@ -168,6 +259,7 @@ export default function DeepScan() {
 
             setProgress(10);
             setProgressLabel(PROGRESS_STAGES[0]);
+
 
             const res = await fetch(API_URL, {
                 method: "POST",
@@ -184,6 +276,47 @@ export default function DeepScan() {
 
             const data: ScanReport = await res.json();
             setReport(data);
+            
+            // --- CONNECT WEBSOCKET CHAT POST-ANALYSIS ---
+            setChatStatus("Connecting...");
+            const ws = new WebSocket(WS_URL);
+            wsRef.current = ws;
+            
+            ws.onopen = () => {
+                setChatStatus("Connected");
+                // Immediately send the context so the backend can initialize the Gemini prompt
+                ws.send(JSON.stringify({
+                    type: "init",
+                    context: data
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const wsData = JSON.parse(event.data);
+                    if (wsData.type === "chat_reply") {
+                        setChatHistory((prev) => [...prev, {
+                            role: "agent",
+                            text: wsData.message,
+                            audioBase64: wsData.audio_data
+                        }]);
+                        
+                        // Automatically play the incoming audio response
+                        if (wsData.audio_data) {
+                            const audio = new Audio(wsData.audio_data);
+                            audio.play().catch(console.error);
+                        }
+                    } else if (wsData.type === "system") {
+                        console.log("System:", wsData.message);
+                    }
+                } catch {
+                    console.warn("Failed to parse WS chat message", event.data);
+                }
+            };
+            
+            ws.onerror = () => setChatStatus("WebSocket Error");
+            ws.onclose = () => setChatStatus("Disconnected");
+            
         } catch (err) {
             clearInterval(progressInterval);
             if (err instanceof DOMException && err.name === "AbortError") {
@@ -198,6 +331,11 @@ export default function DeepScan() {
             abortRef.current = null;
         }
     };
+    
+    // Cleanup WebSocket on unmount
+    useEffect(() => {
+        return () => wsRef.current?.close();
+    }, []);
 
     // ── Stop analysis ────────────────────────────────────────
     const stopAnalysis = () => {
@@ -324,6 +462,7 @@ export default function DeepScan() {
                 </div>
             )}
 
+
             {error && (
                 <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
                     {error}
@@ -364,8 +503,8 @@ export default function DeepScan() {
                             <span className="text-sm text-slate-200">
                                 {report.assessment.message}
                             </span>
+
                         </div>
-                    )}
 
                     {/* Forensics results */}
                     {report.forensics.length > 0 && (
@@ -435,6 +574,75 @@ export default function DeepScan() {
                             ))}
                         </div>
                     </div>
+                </div>
+            )}
+
+                        </div>
+                        
+                        <form onSubmit={handleChatSubmit} className="flex gap-2">
+                            <input
+                                type="text"
+                                value={chatInput}
+                                onChange={(e) => setChatInput(e.target.value)}
+                                placeholder={isListening ? "Listening..." : "Ask about the property..."}
+                                disabled={chatStatus !== "Connected"}
+                                className="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-4 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+                            />
+                            <button
+                                type="button"
+                                onClick={toggleListening}
+                                disabled={chatStatus !== "Connected"}
+                                className={`flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                                    isListening ? 'bg-red-500 text-white hover:bg-red-400 animate-pulse' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                                } disabled:opacity-50`}
+                                title="Use voice input"
+                            >
+                                {isListening ? "⏹" : "🎤"}
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={chatStatus !== "Connected" || !chatInput.trim()}
+                                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                            >
+                                Send
+                            </button>
+                        </form>
+                    </div>
+
+                {/* ── Zillow Comparison Summary ───────────────────── */}
+                {report.listing_comparison && (
+                    <div className="lg:col-span-2 rounded-xl border border-slate-700 bg-slate-800/50 p-6 space-y-4">
+                        <h3 className="text-lg font-semibold text-white">📊 Zillow Listing Comparison</h3>
+                        
+                        {report.listing_comparison.error ? (
+                            <p className="text-sm text-amber-400">{report.listing_comparison.error}</p>
+                        ) : (
+                            <>
+                                <div className="grid gap-4 sm:grid-cols-4">
+                                    <InfoCard label="Address" value={report.listing_comparison.address} />
+                                    <InfoCard label="Price" value={report.listing_comparison.price} />
+                                    <InfoCard label="Beds / Baths" value={`${report.listing_comparison.beds} / ${report.listing_comparison.baths}`} />
+                                    <InfoCard label="Sqft" value={report.listing_comparison.sqft} />
+                                </div>
+                                
+                                <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-5">
+                                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                                        Forensic Comparison Summary
+                                    </h4>
+                                    <div className="space-y-1">
+                                        {report.listing_comparison.comparison_summary.split('\n').map((line, i) => (
+                                            <p key={i} className="text-sm text-slate-300 leading-relaxed">{line}</p>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <p className="text-xs text-slate-500">
+                                    Source: {report.listing_comparison.source} · {report.listing_comparison.photo_count} listing photos analyzed
+                                </p>
+                            </>
+                        )}
+                    </div>
+                )}
                 </div>
             )}
         </div>
