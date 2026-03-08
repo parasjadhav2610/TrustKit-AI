@@ -20,8 +20,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-import cv2
-import numpy as np
+import cv2  # type: ignore[import-untyped]
+import numpy as np  # type: ignore[import-untyped]
 
 
 # ---------------------------------------------------------------------------
@@ -84,9 +84,13 @@ def analyze_live_frame(frame_bytes: bytes) -> dict:
     if brightness < _DARKNESS_THRESHOLD:
         suspicious_flags.append("artificially_darkened_environment")
 
+    # Manual rounding to 2 decimal places (avoids Pyre2 round() overload bug)
+    rounded_blur: float = int(blur_score * 100) / 100.0
+    rounded_brightness: float = int(brightness * 100) / 100.0
+
     return {
-        "blur_score": round(blur_score, 2),
-        "brightness": round(brightness, 2),
+        "blur_score": rounded_blur,
+        "brightness": rounded_brightness,
         "suspicious_flags": suspicious_flags,
         "valid": True,
     }

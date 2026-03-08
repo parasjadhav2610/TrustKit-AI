@@ -22,9 +22,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from dotenv import load_dotenv
-
-load_dotenv()
+try:
+    from dotenv import load_dotenv  # type: ignore[import]
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed; env vars must be set manually
 
 # ---------------------------------------------------------------------------
 # Data classes
@@ -78,8 +80,8 @@ def _get_model():
         return None
 
     try:
-        import vertexai
-        from vertexai.generative_models import GenerativeModel
+        import vertexai  # type: ignore[import]
+        from vertexai.generative_models import GenerativeModel  # type: ignore[import]
 
         vertexai.init(project=project, location=location)
         _model = GenerativeModel("gemini-2.5-flash")
@@ -155,7 +157,7 @@ class VisionAnalyzer:
 
         if model is not None and Path(frame_path).exists():
             try:
-                from vertexai.generative_models import Image as VertexImage, Part
+                from vertexai.generative_models import Image as VertexImage, Part  # type: ignore[import]
 
                 image = VertexImage.load_from_file(frame_path)
                 response = model.generate_content(
@@ -197,7 +199,7 @@ class VisionAnalyzer:
 
         if model is not None and frame_bytes:
             try:
-                from vertexai.generative_models import Part
+                from vertexai.generative_models import Part  # type: ignore[import]
 
                 image_part = Part.from_data(data=frame_bytes, mime_type="image/jpeg")
                 response = model.generate_content(
