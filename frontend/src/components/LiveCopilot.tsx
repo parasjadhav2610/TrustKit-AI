@@ -15,7 +15,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import AlertPanel, { type Alert } from "./AlertPanel";
 
 const WS_URL = "ws://localhost:8000/ws/live";
-const FRAME_INTERVAL_MS = 1000; // 1 FPS — keeps within Vertex AI rate limits
+const FRAME_INTERVAL_MS = 3000; // 1 frame every 3s — prevents Vertex AI queue backlog
 
 export default function LiveCopilot() {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -97,11 +97,27 @@ export default function LiveCopilot() {
                 }, FRAME_INTERVAL_MS);
             };
 
+            // Manage audio playback to avoid overlapping
+            let currentAudio: HTMLAudioElement | null = null;
+
             ws.onmessage = (event) => {
                 try {
                     const data: Alert = JSON.parse(event.data);
+
+                    // Filter out fallback alerts from polluting the UI
+                    if (data.message === "Analyzing next frame...") return;
+
                     setAlerts((prev) => [data, ...prev]);
                     setTrustScore(data.trust_score);
+
+                    // Automatically play new incoming audio warnings
+                    if (data.audio_data) {
+                        // Only play if not currently speaking to avoid overlapping chaos
+                        if (!currentAudio || currentAudio.ended || currentAudio.paused) {
+                            currentAudio = new Audio(data.audio_data);
+                            currentAudio.play().catch(console.error);
+                        }
+                    }
                 } catch {
                     console.warn("Failed to parse WS message", event.data);
                 }
@@ -116,6 +132,12 @@ export default function LiveCopilot() {
                 if (intervalRef.current) {
                     clearInterval(intervalRef.current);
                     intervalRef.current = null;
+                }
+
+                // Stop any audio playing
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
                 }
             };
         } catch (err) {

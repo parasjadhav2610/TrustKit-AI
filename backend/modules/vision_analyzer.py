@@ -31,18 +31,7 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 
 
-@dataclass
-class VisionObservation:
-    frame_index: int
-    description: str
-    objects: List[str]
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "frame_index": self.frame_index,
-            "description": self.description,
-            "objects": self.objects,
-        }
 
 
 # ---------------------------------------------------------------------------
@@ -140,44 +129,7 @@ class VisionAnalyzer:
     def __init__(self) -> None:
         pass
 
-    def analyze_frame(self, frame_path: str, frame_index: int) -> VisionObservation:
-        """
-        Analyze a single frame file and return observations.
 
-        Args:
-            frame_path: Path to the JPEG frame on disk.
-            frame_index: Index of this frame in the extraction sequence.
-
-        Returns:
-            A VisionObservation with description and detected objects.
-        """
-        model = _get_model()
-
-        if model is not None and Path(frame_path).exists():
-            try:
-                from vertexai.generative_models import Image as VertexImage, Part
-
-                image = VertexImage.load_from_file(frame_path)
-                response = model.generate_content(
-                    [_VISION_PROMPT, image],
-                    generation_config={"response_mime_type": "application/json"},
-                )
-                parsed = _parse_response(response.text)
-                if parsed:
-                    return VisionObservation(
-                        frame_index=frame_index,
-                        description=f"{parsed.get('room_type', 'room')} — {parsed.get('condition', 'unknown')} condition",
-                        objects=parsed.get("objects", []),
-                    )
-            except Exception as exc:
-                print(f"[vision_analyzer] Gemini call failed for frame {frame_index}: {exc}")
-
-        # Fallback mock
-        return VisionObservation(
-            frame_index=frame_index,
-            description="Indoor apartment scene with possible furniture",
-            objects=["wall", "window", "floor"],
-        )
 
     def analyze_frame_bytes(self, frame_bytes: bytes, frame_index: int = 0) -> dict:
         """
@@ -227,21 +179,7 @@ class VisionAnalyzer:
             "description": "Indoor apartment scene with possible furniture",
         }
 
-    def analyze_frames(self, frames: List[str]) -> List[VisionObservation]:
-        """
-        Analyze multiple frame files.
 
-        Args:
-            frames: List of file paths to JPEG frames.
-
-        Returns:
-            List of VisionObservation results.
-        """
-        results: List[VisionObservation] = []
-        for i, frame_path in enumerate(frames):
-            obs = self.analyze_frame(frame_path, i)
-            results.append(obs)
-        return results
 
 
 # ---------------------------------------------------------------------------

@@ -92,17 +92,4 @@ def analyze_live_frame(frame_bytes: bytes) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
-# Backward-compatible wrapper
-# ---------------------------------------------------------------------------
-# main.py can import either name:
-#   from modules.metadata_analyzer import analyze_live_frame
-#   from modules.metadata_analyzer import analyze_metadata
 
-def analyze_metadata(frame_bytes: bytes) -> dict:
-    """Backward-compatible alias for analyze_live_frame.
-
-    Accepts raw frame bytes (not a file path) and returns the
-    forensic analysis dict.
-    """
-    return analyze_live_frame(frame_bytes)

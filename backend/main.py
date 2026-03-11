@@ -19,7 +19,7 @@ from modules.metadata_analyzer import analyze_live_frame
 from modules.agent_reasoner import evaluate_trust
 from modules.listing_scraper import scrape_zillow_listing
 
-from modules.tts_engine import generate_warning_audio
+from modules.tts_engine import generate_warning_audio, generate_chat_response
 
 # ---------------------------------------------------------------------------
 # App initialisation
@@ -139,199 +139,167 @@ async def live_copilot(websocket: WebSocket):
         except json.JSONDecodeError:
             print("[ws/live] ⚠️  First message was not valid JSON config, proceeding without claims")
 
+        processing_task = None
+        
+        async def process_frame(f_bytes, f_idx, current_claims):
+            nonlocal last_assessment
+            try:
+                # ── 2. OpenCV & Vision IN PARALLEL ──────
+                print(f"[ws/live]   → Running forensics & Vision concurrently...")
+                forensics_task = asyncio.to_thread(analyze_live_frame, f_bytes)
+                vision_task = asyncio.to_thread(analyze_frame, f_bytes)
+                
+                forensics, vision_data = await asyncio.gather(forensics_task, vision_task)
+                
+                print(f"[ws/live]   ✓ Forensics: blur={forensics.get('blur_score')}, flags={forensics.get('suspicious_flags')}")
+                print(f"[ws/live]   ✓ Vision: room={vision_data.get('room_type')}, condition={vision_data.get('condition')}")
+
+                # ── 4. Combine payload ──────
+                combined_payload = {
+                    **vision_data,
+                    "forensics": {
+                        "blur_score": forensics.get("blur_score", 0),
+                        "brightness": forensics.get("brightness", 0),
+                    },
+                }
+                combined_payload["suspicious_elements"] = (
+                    vision_data.get("suspicious_elements", []) + forensics.get("suspicious_flags", [])
+                )
+
+                # ── 5. Agent Reasoner ───────
+                print(f"[ws/live]   → Running Agent Reasoner...")
+                alert = await asyncio.to_thread(
+                    evaluate_trust,
+                    combined_payload,
+                    current_claims,
+                )
+                print(f"[ws/live]   ✓ Result: alert={alert.get('alert')}, score={alert.get('trust_score')}")
+
+                last_assessment = alert
+
+                # ── Audio Pipeline ──
+                if alert.get("alert"):
+                    alert["audio_data"] = await asyncio.to_thread(
+                        generate_warning_audio, alert
+                    )
+
+                # ── 6. Send result ──────────────
+                await websocket.send_json(alert)
+                print(f"[ws/live]   ✓ Sent frame #{f_idx} to frontend")
+
+            except WebSocketDisconnect:
+                pass
+            except Exception as frame_exc:
+                print(f"[ws/live]   ❌ Frame #{f_idx} error: {frame_exc}")
+                traceback.print_exc()
+                try:
+                    await websocket.send_json(_FALLBACK_ALERT)
+                except Exception:
+                    pass
+
         while True:
             # Receive any type of message
             message = await websocket.receive()
             
+            if message.get("type") == "websocket.disconnect":
+                raise WebSocketDisconnect(message.get("code", 1000))
+            
             if "bytes" in message:
-                # ── 1. Receive binary JPEG frame ──────────────────────
+                if processing_task and not processing_task.done():
+                    # Drop frame to prevent queue buildup and keep latency strictly real-time
+                    continue
+                    
                 frame_bytes = message["bytes"]
                 frame_count += 1
                 print(f"\n[ws/live] ── Frame #{frame_count} ({len(frame_bytes)} bytes) ──")
+                
+                processing_task = asyncio.create_task(process_frame(frame_bytes, frame_count, listing_claims))
 
-                try:
-                    # ── 2. OpenCV forensics (sync → thread pool) ─────
-                    print(f"[ws/live]   → Running OpenCV forensics...")
-                    forensics = await asyncio.to_thread(
-                        analyze_live_frame, frame_bytes
-                    )
-                    print(f"[ws/live]   ✓ Forensics: blur={forensics.get('blur_score')}, "
-                          f"brightness={forensics.get('brightness')}, "
-                          f"flags={forensics.get('suspicious_flags')}")
 
-                    # ── 3. Vertex AI Vision (sync → thread pool) ─────
-                    print(f"[ws/live]   → Running Vertex AI Vision...")
-                    vision_data = await asyncio.to_thread(
-                        analyze_frame, frame_bytes
-                    )
-                    print(f"[ws/live]   ✓ Vision: room={vision_data.get('room_type')}, "
-                          f"view={vision_data.get('view')}, "
-                          f"condition={vision_data.get('condition')}")
-
-                    # ── 4. Combine forensic flags + vision data ──────
-                    combined_payload = {
-                        **vision_data,
-                        "forensics": {
-                            "blur_score": forensics.get("blur_score", 0),
-                            "brightness": forensics.get("brightness", 0),
-                        },
-                    }
-
-                    # Merge forensic flags into the suspicious_elements
-                    # list so the reasoner sees everything in one place
-                    forensic_flags = forensics.get("suspicious_flags", [])
-                    vision_suspicious = vision_data.get("suspicious_elements", [])
-                    combined_payload["suspicious_elements"] = (
-                        vision_suspicious + forensic_flags
-                    )
-
-                    # ── 5. Agent Reasoner (sync → thread pool) ───────
-                    print(f"[ws/live]   → Running Agent Reasoner...")
-                    alert = await asyncio.to_thread(
-                        evaluate_trust,
-                        combined_payload,
-                        listing_claims,
-                    )
-                    print(f"[ws/live]   ✓ Result: alert={alert.get('alert')}, "
-                          f"score={alert.get('trust_score')}, "
-                          f"msg={alert.get('message')}")
-
-                    # Store it for the chat context later
-                    last_assessment = alert
-
-                    # ── Audio Pipeline ──
-                    if alert.get("alert"):
-                        alert["audio_data"] = await asyncio.to_thread(
-                            generate_warning_audio, alert
-                        )
-
-                    # ── 6. Send result back to frontend ──────────────
-                    await websocket.send_json(alert)
-                    print(f"[ws/live]   ✓ Sent to frontend")
-
-                except Exception as frame_exc:
-                    # Per-frame error — do NOT close the WebSocket
-                    print(f"[ws/live]   ❌ Frame #{frame_count} error: {frame_exc}")
-                    traceback.print_exc()
-                    await websocket.send_json(_FALLBACK_ALERT)
-                    print(f"[ws/live]   → Sent fallback JSON, continuing...")
-
-                    # ── 6. Send result back to frontend ──────────────
-                    await websocket.send_json(alert)
-
-                except Exception as frame_exc:
-                    # Per-frame error — do NOT close the WebSocket
-                    print(f"[ws/live] Frame error: {frame_exc}")
-                    traceback.print_exc()
-                    await websocket.send_json(_FALLBACK_ALERT)
-
-            elif "text" in message:
-                # --- Two-Way Chat Pipeline (Post-call or in-call) ---
-                text_data = message["text"]
-                try:
-                    payload = json.loads(text_data)
-                    user_message = payload.get("text", "")
-                    
-                    if user_message:
-                        from modules.tts_engine import generate_chat_response, generate_warning_audio
-                        
-                        # Use Gemini to generate conversational response based on the last assessment
-                        text_response = await asyncio.to_thread(
-                            generate_chat_response, user_message, last_assessment
-                        )
-                        
-                        # Generate audio from the response text
-                        audio_base64 = await asyncio.to_thread(
-                            generate_warning_audio, text_response
-                        )
-                        
-                        response_payload = {
-                            "type": "chat_reply",
-                            "message": text_response,
-                            "audio_data": audio_base64
-                        }
-                        await websocket.send_json(response_payload)
-                except json.JSONDecodeError:
-                    print("Received text that was not valid JSON.")
-                    
     except WebSocketDisconnect:
         print(f"[ws/live] Client disconnected after {frame_count} frames")
     except Exception as exc:
         print(f"[ws/live] ❌ Unexpected error: {exc}")
         traceback.print_exc()
 
-@app.websocket("/ws/chat")
-async def deepscan_chat(websocket: WebSocket):
-    """Dedicated WebSocket endpoint for DeepScan post-analysis two-way chat.
-    
-    Flow:
-        1. DeepScan completes the POST analysis.
-        2. Frontend opens this websocket and sends a JSON payload:
-           {"type": "init", "context": <assessment_dict>}
-        3. Backend initializes a conversational session with that context.
-        4. User sends subsequent text queries: {"text": "What about the view?"}
-        5. Backend responds with the text phrase and audio output.
-    """
+
+
+from modules.voice_agent import stream_voice_chat
+
+@app.websocket("/ws/voice")
+async def deepscan_voice(websocket: WebSocket):
+    """Full-duplex real-time voice endpoint for Deep Scan."""
     await websocket.accept()
-    print("[ws/chat] Client connected")
+    print("[ws/voice] 🎙️ Voice client connected")
     
-    # Context state
     session_context = {}
     chat_history = []
+    interrupt_event = asyncio.Event()
+    audio_buffer = bytearray()
     
     try:
-        while websocket.client_state == WebSocketState.CONNECTED:
-            message = await websocket.receive_text()
+        while True:
+            # Receive either binary audio chunks or JSON text commands
+            message = await websocket.receive()
             
-            try:
-                payload = json.loads(message)
+            if message.get("type") == "websocket.disconnect":
+                raise WebSocketDisconnect(message.get("code", 1000))
+            
+            if "bytes" in message:
+                audio_buffer.extend(message["bytes"])
                 
-                if payload.get("type") == "init":
-                    # Initial connection payload containing the full report context
-                    session_context = payload.get("context", {})
-                    chat_history.append({"role": "system", "content": f"Tour context: {json.dumps(session_context)}"})
-                    await websocket.send_json({"type": "system", "message": "Chat session initialized."})
+            elif "text" in message:
+                text_data = message["text"]
+                try:
+                    payload = json.loads(text_data)
+                    action = payload.get("action")
                     
-                elif "text" in payload:
-                    user_message = payload["text"]
+                    if payload.get("type") == "init":
+                        session_context = payload.get("context", {})
+                        chat_history = []
+                        await websocket.send_json({"type": "system", "message": "Voice session initialized."})
+                        
+                    elif action == "interrupt":
+                        print("[ws/voice] 🛑 Interrupt received!")
+                        interrupt_event.set()
+                        
+                    elif action == "commit_audio":
+                        # User stopped speaking, process the accumulated audio buffer
+                        if not audio_buffer:
+                            continue
+                            
+                        # Reset interrupt event for the new generation
+                        interrupt_event.clear()
+                        
+                        audio_bytes = bytes(audio_buffer)
+                        audio_buffer.clear() # reset buffer
+                        
+                        print("[ws/voice] 🧠 Thinking about audio input...")
+                        
+                        full_agent_response = ""
+                        # Stream from vertex natively
+                        async for response_chunk in stream_voice_chat(
+                            audio_bytes, 
+                            session_context, 
+                            chat_history, 
+                            interrupt_event
+                        ):
+                            # Send chunk back to frontend (text or audio)
+                            await websocket.send_json(response_chunk)
+                            if response_chunk.get("message"):
+                                full_agent_response += response_chunk["message"]
+                        
+                        if full_agent_response:
+                            chat_history.append({"role": "agent", "content": full_agent_response})
+                            
+                except json.JSONDecodeError:
+                    print("[ws/voice] Invalid JSON received.")
                     
-                    if user_message:
-                        # Append to our local history for Context (if we were using a full ChatSession we'd pass it here)
-                        # Instead, we rebuild the whole string so the _generate_chat_response sees the history
-                        chat_history.append({"role": "user", "content": user_message})
-                        
-                        # Build a mock conversational prompt out of the history
-                        history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in chat_history])
-                        
-                        from modules.tts_engine import generate_chat_response, generate_warning_audio
-                        text_response = await asyncio.to_thread(
-                            generate_chat_response, history_text, session_context
-                        )
-                        
-                        # Keep history
-                        chat_history.append({"role": "agent", "content": text_response})
-                        
-                        # Convert to speech
-                        audio_base64 = await asyncio.to_thread(
-                            generate_warning_audio, text_response
-                        )
-                        
-                        response_payload = {
-                            "type": "chat_reply",
-                            "message": text_response,
-                            "audio_data": audio_base64
-                        }
-                        await websocket.send_json(response_payload)
-                        
-            except json.JSONDecodeError:
-                print("[ws/chat] Received invalid JSON.")
-                
     except WebSocketDisconnect:
-        print("[ws/chat] Client disconnected")
+        print("[ws/voice] Client disconnected")
     except Exception as exc:
-        print(f"[ws/chat] Unexpected error: {exc}")
+        print(f"[ws/voice] ❌ Unexpected error: {exc}")
         traceback.print_exc()
-
 
 # ---------------------------------------------------------------------------
 # Health check & REST Routes
