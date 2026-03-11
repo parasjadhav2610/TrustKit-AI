@@ -291,42 +291,7 @@ class FrameExtractor:
 _default_extractor = FrameExtractor(output_root="tmp/frames")
 
 
-def extract_from_stream(buffer: bytes) -> list[bytes]:
-    """Extract frames from a live video stream buffer.
 
-    Writes the buffer to a temporary file, uses FrameExtractor.iter_frames
-    to decode real frames via OpenCV, and returns them as JPEG-encoded bytes.
-
-    Args:
-        buffer: Raw binary data received from the WebSocket stream.
-
-    Returns:
-        A list of JPEG-encoded frame byte-buffers.
-    """
-    import os
-
-    # Write buffer to a temp file so OpenCV can open it
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
-        tmp.write(buffer)
-        tmp_path = tmp.name
-
-    result: list[bytes] = [buffer]
-    try:
-        encoded_frames: list[bytes] = []
-        for _idx, _ts, frame in _default_extractor.iter_frames(tmp_path, interval_sec=1.0):
-            ok, jpg = cv2.imencode(".jpg", frame)
-            if ok:
-                encoded_frames.append(jpg.tobytes())
-        result = encoded_frames if encoded_frames else [b""]
-    except FrameExtractionError:
-        # If decoding fails (e.g. buffer is a single raw frame, not a video),
-        # return the raw buffer as-is so the caller still gets data.
-        result = [buffer]
-    finally:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-
-    return result
 
 
 def extract_from_file(video_path: str, num_frames: int = 7) -> list[bytes]:

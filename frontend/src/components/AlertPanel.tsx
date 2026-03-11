@@ -11,6 +11,7 @@ export interface Alert {
     alert: boolean;
     message: string;
     trust_score: number;
+    audio_data?: string;
 }
 
 interface AlertPanelProps {
@@ -58,8 +59,8 @@ export default function AlertPanel({ alerts, trustScore }: AlertPanelProps) {
                         <li
                             key={i}
                             className={`flex items-start gap-3 rounded-lg border px-4 py-3 ${a.alert
-                                    ? "border-red-500/40 bg-red-500/10"
-                                    : "border-slate-700 bg-slate-800/60"
+                                ? "border-red-500/40 bg-red-500/10"
+                                : "border-slate-700 bg-slate-800/60"
                                 }`}
                         >
                             {a.alert && (

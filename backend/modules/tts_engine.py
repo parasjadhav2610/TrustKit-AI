@@ -127,7 +127,9 @@ def generate_warning_audio(text_or_report) -> str:
         )
         
         audio_config = texttospeech.AudioConfig(
-            audio_encoding=texttospeech.AudioEncoding.MP3
+            audio_encoding=texttospeech.AudioEncoding.MP3,
+            speaking_rate=0.95,
+            pitch=-2.0
         )
         
         response = client.synthesize_speech(
