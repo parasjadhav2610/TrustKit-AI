@@ -64,7 +64,7 @@ def _get_model():
     except Exception as exc:
         print(f"[agent_reasoner] Vertex AI init failed: {exc}. Attempting google.generativeai fallback...")
         try:
-            import google.generativeai as genai
+            import google.generativeai as genai  # type: ignore[import]
             api_key = os.getenv("GEMINI_API_KEY")
             if api_key:
                 genai.configure(api_key=api_key)

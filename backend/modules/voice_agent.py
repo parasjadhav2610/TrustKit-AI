@@ -2,8 +2,8 @@ import asyncio
 import json
 import traceback
 from typing import AsyncGenerator
-from vertexai.generative_models import GenerativeModel, Part
-from modules.tts_engine import generate_warning_audio
+from vertexai.generative_models import GenerativeModel, Part  # type: ignore[import]
+from modules.tts_engine import generate_warning_audio  # type: ignore[import]
 
 model = GenerativeModel("gemini-2.5-flash")
 
@@ -18,7 +18,7 @@ async def stream_voice_chat(
     Yields text and audio data back to the websocket.
     """
     # Build a simple history string
-    history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-10:]])
+    history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-10:]])  # type: ignore
     
     prompt = (
         f"You are TrustKit, a senior real estate fraud investigator. "
@@ -43,32 +43,34 @@ async def stream_voice_chat(
             stream=True
         )
         
-        sentence_buffer = ""
+        sentence_buffer_list: list[str] = []
         async for chunk in response_stream:
             if interrupt_event.is_set():
                 print("[voice_agent] 🛑 Generation interrupted by user.")
                 break
                 
-            text = getattr(chunk, "text", "")
+            text: str = str(getattr(chunk, "text", ""))
             if not text:
                 continue
                 
             # Yield text chunks immediately so the UI chat log updates live
             yield {"type": "chat_reply", "message": text}
             
-            sentence_buffer += text
+            sentence_buffer_list.append(text)
             
             # Simple chunking for TTS: Wait for punctuation to submit to TTS engine
-            if any(punc in sentence_buffer for punc in ['.', '!', '?', '\n']):
-                clean_sentence = sentence_buffer.strip()
+            joined_sentence = "".join(sentence_buffer_list)
+            if any(punc in joined_sentence for punc in ['.', '!', '?', '\n']):
+                clean_sentence = joined_sentence.strip()
                 if clean_sentence:
                     audio_b64 = await asyncio.to_thread(generate_warning_audio, clean_sentence)
                     if audio_b64 and not interrupt_event.is_set():
                         yield {"type": "chat_reply", "audio_data": audio_b64}
-                sentence_buffer = ""
+                sentence_buffer_list.clear()
                 
         # Send any remaining text to TTS
-        clean_sentence = sentence_buffer.strip()
+        joined_sentence = "".join(sentence_buffer_list)
+        clean_sentence = joined_sentence.strip()
         if clean_sentence and not interrupt_event.is_set():
             audio_b64 = await asyncio.to_thread(generate_warning_audio, clean_sentence)
             if audio_b64:

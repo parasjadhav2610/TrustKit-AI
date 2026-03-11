@@ -17,6 +17,7 @@ import base64
 import json
 import os
 from io import BytesIO
+from typing import Optional
 
 def _generate_natural_language(report: dict) -> str:
     """Converts a structured risk report into a natural language string.
@@ -36,7 +37,7 @@ def _generate_natural_language(report: dict) -> str:
     
     # Try using Gemini to generate a conversational, empathetic warning
     try:
-        from modules.agent_reasoner import _get_model
+        from modules.agent_reasoner import _get_model  # type: ignore
         model = _get_model()
         
         if model:
@@ -62,7 +63,7 @@ def _generate_natural_language(report: dict) -> str:
     else:
         return base_message
 
-def generate_chat_response(transcription: str, context: dict = None) -> str:
+def generate_chat_response(transcription: str, context: Optional[dict] = None) -> str:
     """Generates a conversational response to a user's question during post-call chat.
     
     Args:
@@ -73,7 +74,7 @@ def generate_chat_response(transcription: str, context: dict = None) -> str:
         str: A conversational textual response from the agent.
     """
     try:
-        from modules.agent_reasoner import _get_model
+        from modules.agent_reasoner import _get_model  # type: ignore
         model = _get_model()
         
         if model:
@@ -114,7 +115,7 @@ def generate_warning_audio(text_or_report) -> str:
 
     # Attempt Option 2: Google Cloud TTS (if credentials exist)
     try:
-        from google.cloud import texttospeech
+        from google.cloud import texttospeech  # type: ignore
         
         # This requires GOOGLE_APPLICATION_CREDENTIALS to be set in the environment
         client = texttospeech.TextToSpeechClient()
@@ -144,7 +145,7 @@ def generate_warning_audio(text_or_report) -> str:
         
         # Fallback Option 1: gTTS (MVP)
         try:
-            from gtts import gTTS
+            from gtts import gTTS  # type: ignore
             import tempfile
             
             tts = gTTS(text=text_to_speak, lang="en", slow=False)

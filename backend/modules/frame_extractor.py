@@ -323,7 +323,7 @@ def extract_from_file(video_path: str, num_frames: int = 7) -> list[bytes]:
         if total_frames <= num_frames:
             target_indices = list(range(total_frames))
         else:
-            step = max(1, total_frames / num_frames)
+            step = max(1.0, total_frames / num_frames)
             target_indices = [int(i * step) for i in range(num_frames)]
             # ensure last index does not exceed bounds
             if target_indices[-1] >= total_frames:
