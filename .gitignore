@@ -34,3 +34,11 @@ frontend/.vite
 # GCP
 backend/gcp-key.json
 gcp-key.json
+
+# Tests
+tests/
+*test*.py
+*test*.ts
+*test*.tsx
+*test*.js
+*test*.jsx
