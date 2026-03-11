@@ -2,6 +2,8 @@
 
 **Real-time voice-and-vision AI copilot for rental property tours.** TrustKit acts as your personal fraud investigator, watching virtual tours live alongside you and chatting over a full-duplex voice connection to flag inconsistencies between what is shown on screen and what the listing promises.
 
+https://github.com/user-attachments/assets/5f20fbbc-0e28-4b4e-8763-ff07c86fba20
+
 ---
 
 ## Key Features
