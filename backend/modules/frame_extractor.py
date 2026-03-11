@@ -291,62 +291,55 @@ class FrameExtractor:
 _default_extractor = FrameExtractor(output_root="tmp/frames")
 
 
-def extract_from_stream(buffer: bytes) -> list[bytes]:
-    """Extract frames from a live video stream buffer.
-
-    Writes the buffer to a temporary file, uses FrameExtractor.iter_frames
-    to decode real frames via OpenCV, and returns them as JPEG-encoded bytes.
-
-    Args:
-        buffer: Raw binary data received from the WebSocket stream.
-
-    Returns:
-        A list of JPEG-encoded frame byte-buffers.
-    """
-    import os
-
-    # Write buffer to a temp file so OpenCV can open it
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
-        tmp.write(buffer)
-        tmp_path = tmp.name
-
-    result: list[bytes] = [buffer]
-    try:
-        encoded_frames: list[bytes] = []
-        for _idx, _ts, frame in _default_extractor.iter_frames(tmp_path, interval_sec=1.0):
-            ok, jpg = cv2.imencode(".jpg", frame)
-            if ok:
-                encoded_frames.append(jpg.tobytes())
-        result = encoded_frames if encoded_frames else [b""]
-    except FrameExtractionError:
-        # If decoding fails (e.g. buffer is a single raw frame, not a video),
-        # return the raw buffer as-is so the caller still gets data.
-        result = [buffer]
-    finally:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-
-    return result
 
 
-def extract_from_file(video_path: str) -> list[bytes]:
-    """Extract key frames from an uploaded video file.
 
-    Uses FrameExtractor.iter_frames to decode real frames with OpenCV
-    and returns them as JPEG-encoded bytes.
+def extract_from_file(video_path: str, num_frames: int = 7) -> list[bytes]:
+    """Extract a specific number of evenly spaced frames from an uploaded video file.
 
     Args:
         video_path: Absolute path to the video file on disk.
+        num_frames: The exact number of frames to extract (evenly spaced).
 
     Returns:
-        A list of JPEG-encoded frame byte-buffers sampled from the video
-        (one per second).
+        A list of JPEG-encoded frame byte-buffers sampled from the video.
     """
+    video_file = Path(video_path)
+    if not video_file.exists() or not video_file.is_file():
+        raise FrameExtractionError(f"Video not found: {video_path}")
+
+    cap = cv2.VideoCapture(str(video_file))
+    if not cap.isOpened():
+        raise FrameExtractionError(f"Could not open video: {video_path}")
+
     encoded_frames: list[bytes] = []
-    for _idx, _ts, frame in _default_extractor.iter_frames(video_path, interval_sec=1.0):
-        ok, jpg = cv2.imencode(".jpg", frame)
-        if ok:
-            encoded_frames.append(jpg.tobytes())
+    try:
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        if total_frames <= 0:
+            return encoded_frames
+            
+        # Calculate exactly which frame indices we want to grab
+        # e.g., if total=300 and num=7, grab [0, 50, 100, 150, 200, 250, 299]
+        if total_frames <= num_frames:
+            target_indices = list(range(total_frames))
+        else:
+            step = max(1, total_frames / num_frames)
+            target_indices = [int(i * step) for i in range(num_frames)]
+            # ensure last index does not exceed bounds
+            if target_indices[-1] >= total_frames:
+                target_indices[-1] = total_frames - 1
+
+        for target_idx in target_indices:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, target_idx)
+            ok, frame = cap.read()
+            if ok:
+                ok_encode, jpg = cv2.imencode(".jpg", frame)
+                if ok_encode:
+                    encoded_frames.append(jpg.tobytes())
+
+    finally:
+        cap.release()
+        
     return encoded_frames
 
 

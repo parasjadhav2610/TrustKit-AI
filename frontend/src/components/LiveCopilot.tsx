@@ -1,19 +1,21 @@
 /**
  * LiveCopilot — Real-time webcam streaming component.
  *
- * 1. Requests webcam access via getUserMedia.
- * 2. Displays the live feed in a <video> element.
- * 3. Captures JPEG frames on a hidden <canvas> and sends them as
+ * 1. User enters listing details (address, description, etc.)
+ * 2. Requests webcam access via getUserMedia.
+ * 3. Displays the live feed in a <video> element.
+ * 4. Sends listing details as the first WebSocket message (JSON text).
+ * 5. Captures JPEG frames on a hidden <canvas> and sends them as
  *    binary Blobs over a WebSocket to ws://localhost:8000/ws/live
  *    at exactly 1 frame per second.
- * 4. Receives alert JSON from the backend and passes them to AlertPanel.
+ * 6. Receives alert JSON from the backend and passes them to AlertPanel.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import AlertPanel, { type Alert } from "./AlertPanel";
 
 const WS_URL = "ws://localhost:8000/ws/live";
-const FRAME_INTERVAL_MS = 1000; // 1 FPS — keeps within Vertex AI rate limits
+const FRAME_INTERVAL_MS = 3000; // 1 frame every 3s — prevents Vertex AI queue backlog
 
 export default function LiveCopilot() {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -26,6 +28,10 @@ export default function LiveCopilot() {
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [trustScore, setTrustScore] = useState<number | null>(null);
     const [status, setStatus] = useState<string>("Idle");
+
+    // ── Listing details input ─────────────────────────────────────
+    const [listingAddress, setListingAddress] = useState("");
+    const [listingDescription, setListingDescription] = useState("");
 
     // ── Capture a frame from the video → binary Blob ──────────────
     const captureAndSend = useCallback((ws: WebSocket) => {
@@ -70,12 +76,20 @@ export default function LiveCopilot() {
             // Open WebSocket
             setStatus("Connecting to backend…");
             const ws = new WebSocket(WS_URL);
-            ws.binaryType = "arraybuffer"; // not strictly needed for send, but explicit
+            ws.binaryType = "arraybuffer";
             wsRef.current = ws;
 
             ws.onopen = () => {
                 setStatus("Live — analysing frames");
                 setRunning(true);
+
+                // Send listing details as the FIRST message (JSON text)
+                const config = {
+                    type: "config",
+                    listing_address: listingAddress.trim(),
+                    listing_description: listingDescription.trim(),
+                };
+                ws.send(JSON.stringify(config));
 
                 // Start frame capture loop — exactly 1 FPS
                 intervalRef.current = window.setInterval(() => {
@@ -83,11 +97,27 @@ export default function LiveCopilot() {
                 }, FRAME_INTERVAL_MS);
             };
 
+            // Manage audio playback to avoid overlapping
+            let currentAudio: HTMLAudioElement | null = null;
+
             ws.onmessage = (event) => {
                 try {
                     const data: Alert = JSON.parse(event.data);
+
+                    // Filter out fallback alerts from polluting the UI
+                    if (data.message === "Analyzing next frame...") return;
+
                     setAlerts((prev) => [data, ...prev]);
                     setTrustScore(data.trust_score);
+
+                    // Automatically play new incoming audio warnings
+                    if (data.audio_data) {
+                        // Only play if not currently speaking to avoid overlapping chaos
+                        if (!currentAudio || currentAudio.ended || currentAudio.paused) {
+                            currentAudio = new Audio(data.audio_data);
+                            currentAudio.play().catch(console.error);
+                        }
+                    }
                 } catch {
                     console.warn("Failed to parse WS message", event.data);
                 }
@@ -103,12 +133,18 @@ export default function LiveCopilot() {
                     clearInterval(intervalRef.current);
                     intervalRef.current = null;
                 }
+
+                // Stop any audio playing
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
             };
         } catch (err) {
             console.error(err);
             setStatus("Camera access denied");
         }
-    }, [captureAndSend]);
+    }, [captureAndSend, listingAddress, listingDescription]);
 
     // ── Stop pipeline ─────────────────────────────────────────────
     const stop = useCallback(() => {
@@ -154,6 +190,32 @@ export default function LiveCopilot() {
                     </button>
                 )}
             </div>
+
+            {/* ── Listing Details Input ───────────────────────────── */}
+            {!running && (
+                <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                        Listing Details
+                    </h3>
+                    <input
+                        type="text"
+                        placeholder="Listing address (e.g., 123 Main St, Apt 4B, NYC)"
+                        value={listingAddress}
+                        onChange={(e) => setListingAddress(e.target.value)}
+                        className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                    />
+                    <textarea
+                        placeholder="Paste the listing description or let TrustKit auto-fetch it from Zillow using the address above."
+                        value={listingDescription}
+                        onChange={(e) => setListingDescription(e.target.value)}
+                        rows={3}
+                        className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
+                    />
+                    <p className="text-xs text-slate-500">
+                        Enter the address — TrustKit will automatically look up the listing on Zillow.
+                    </p>
+                </div>
+            )}
 
             {/* ── Video + Alerts grid ────────────────────────────── */}
             <div className="grid gap-6 lg:grid-cols-3">

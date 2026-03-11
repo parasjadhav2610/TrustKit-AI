@@ -1,42 +1,88 @@
 """TrustKit AI — Deep Scan REST Endpoint.
 
 Provides the POST /deep-scan route for forensic analysis of
-prerecorded property tour videos.
+prerecorded property tour videos, with optional Zillow listing comparison.
 """
 
+import asyncio
+import json
 import os
 import tempfile
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, Form, UploadFile
 
 from modules.frame_extractor import extract_from_file
-from modules.metadata_analyzer import analyze as analyze_metadata
+from modules.metadata_analyzer import analyze_live_frame
 from modules.vision_analyzer import analyze_frame
-from modules.agent_reasoner import reason
+from modules.agent_reasoner import evaluate_trust
+from modules.tts_engine import generate_warning_audio
 
 router = APIRouter()
 
 
 @router.post("/deep-scan")
-async def deep_scan(file: UploadFile = File(...)):
+async def deep_scan(
+    file: UploadFile = File(...),
+    listing_address: str = Form(""),
+    listing_description: str = Form(""),
+
+):
     """Run forensic Deep Scan analysis on an uploaded video.
 
     Pipeline:
         1. Save the uploaded file to a temporary location.
         2. Extract key frames from the video.
-        3. Analyse video metadata (timestamps, codecs, re-encoding).
-        4. Run vision analysis on extracted frames.
-        5. Feed all data into the agent reasoner.
+        3. Run OpenCV forensics on each frame (blur/brightness).
+        4. Run Vertex AI vision analysis on extracted frames.
+        5. Combine forensic + vision data and pass to agent reasoner.
         6. Return a combined forensic report.
 
     Args:
         file: The uploaded video file (multipart form-data).
+        listing_address: Optional property address from the user.
+        listing_description: Optional listing description from the user.
 
     Returns:
-        dict: A JSON forensic report containing metadata analysis,
+        dict: A JSON forensic report containing forensics analysis,
               vision analysis of extracted frames, and an overall
               trust assessment from the agent reasoner.
-    """
+"""
+
+    # Build listing claims string from user input
+    address = listing_address.strip()
+    description = listing_description.strip()
+
+    # Auto-scrape Zillow if address is provided
+    if address:
+        print(f"[deep-scan] 🔍 Auto-scraping Zillow for: {address}")
+        from modules.listing_scraper import scrape_zillow_listing
+        scraped = await asyncio.to_thread(scrape_zillow_listing, address)
+        if scraped.get("found") and scraped.get("description"):
+            scraped_parts = []
+            if scraped.get("price", "N/A") != "N/A":
+                scraped_parts.append(f"Price: {scraped['price']}")
+            if scraped.get("bedrooms", "N/A") != "N/A":
+                scraped_parts.append(f"{scraped['bedrooms']} bed")
+            if scraped.get("bathrooms", "N/A") != "N/A":
+                scraped_parts.append(f"{scraped['bathrooms']} bath")
+            if scraped.get("sqft", "N/A") != "N/A":
+                scraped_parts.append(f"{scraped['sqft']} sqft")
+            scraped_header = " · ".join(scraped_parts) + ". " if scraped_parts else ""
+            scraped_desc = scraped_header + scraped["description"]
+            description = (description + " " + scraped_desc).strip() if description else scraped_desc
+            print(f"[deep-scan] ✓ Zillow data found, enriched listing claims")
+        else:
+            print(f"[deep-scan] ⚠️  Zillow scrape failed: {scraped.get('error', 'unknown')}")
+
+    parts = []
+    if address:
+        parts.append(f"Address: {address}")
+    if description:
+        parts.append(description)
+    listing_claims = ". ".join(parts) if parts else ""
+
+    print(f"[deep-scan] File: {file.filename}")
+    print(f"[deep-scan] Listing claims: {listing_claims or '(none provided)'}")
 
     # Save uploaded file to a temp path
     suffix = os.path.splitext(file.filename or "video.mp4")[1]
@@ -46,21 +92,111 @@ async def deep_scan(file: UploadFile = File(...)):
         tmp_path = tmp.name
 
     try:
-        # --- Mock pipeline ---
-        frames = extract_from_file(tmp_path)
-        metadata = analyze_metadata(tmp_path)
-        vision_results = [analyze_frame(frame) for frame in frames]
-        assessment = reason(
-            vision_data=vision_results[0] if vision_results else {},
-            metadata=metadata,
+        # --- Extract frames ---
+        frames = await asyncio.to_thread(extract_from_file, tmp_path)
+        print(f"[deep-scan] Extracted {len(frames)} frames")
+
+        # --- Analyze each frame (forensics + vision) ---
+        vision_results = []
+        forensics_results = []
+
+        for i, frame in enumerate(frames):
+            print(f"[deep-scan] Analyzing frame {i + 1}/{len(frames)}...")
+
+            # OpenCV forensics on raw bytes
+            forensics = await asyncio.to_thread(analyze_live_frame, frame)
+            forensics_results.append(forensics)
+
+            # Vertex AI vision
+            vision = await asyncio.to_thread(analyze_frame, frame)
+            vision_results.append(vision)
+
+        # --- Combine first frame data for trust assessment ---
+        combined_payload = {}
+        if vision_results:
+            combined_payload = {**vision_results[0]}
+
+            # Merge forensic flags into suspicious_elements
+            if forensics_results:
+                forensic_flags = forensics_results[0].get("suspicious_flags", [])
+                vision_suspicious = combined_payload.get("suspicious_elements", [])
+                combined_payload["suspicious_elements"] = vision_suspicious + forensic_flags
+                combined_payload["forensics"] = {
+                    "blur_score": forensics_results[0].get("blur_score", 0),
+                    "brightness": forensics_results[0].get("brightness", 0),
+                }
+
+        # --- Agent Reasoner ---
+        assessment = await asyncio.to_thread(
+            evaluate_trust,
+            combined_payload,
+            listing_claims,
         )
 
-        return {
+        
+        
+        # --- Audio Pipeline ---
+        audio_data = None
+        if assessment.get("alert"):
+            audio_data = await asyncio.to_thread(generate_warning_audio, assessment)
+
+        # --- Zillow Comparison Pipeline (if address provided) ---
+        listing_comparison = None
+        listing_data = None
+        
+        if address and address.strip():
+            try:
+                from modules.zillow_scraper import search_by_address
+                from modules.listing_comparator import compare_video_vs_listing
+                
+                # Scrape Zillow listing
+                listing_data = await asyncio.to_thread(search_by_address, address.strip())
+                
+                # Compare if we have photos from both sources
+                listing_photos = listing_data.get("photos_bytes", [])
+                
+                comparison_summary = await asyncio.to_thread(
+                    compare_video_vs_listing,
+                    frames[:3],  # first 3 video frames
+                    listing_photos,  # listing photos
+                    listing_data,  # listing details
+                )
+                
+                listing_comparison = {
+                    "address": listing_data.get("address", address),
+                    "price": listing_data.get("price", "N/A"),
+                    "beds": listing_data.get("beds", "N/A"),
+                    "baths": listing_data.get("baths", "N/A"),
+                    "sqft": listing_data.get("sqft", "N/A"),
+                    "description": listing_data.get("description", ""),
+                    "photo_count": len(listing_data.get("photo_urls", [])),
+                    "source": listing_data.get("source", "unknown"),
+                    "comparison_summary": comparison_summary,
+                }
+            except Exception as e:
+                print(f"[deep_scan] Zillow comparison failed: {e}")
+                listing_comparison = {
+                    "error": str(e),
+                    "comparison_summary": "Zillow comparison was unavailable. Please try again.",
+                }
+
+        print(f"[deep-scan] Assessment: score={assessment.get('trust_score')}, "
+              f"alert={assessment.get('alert')}")
+
+        result = {
             "filename": file.filename,
-            "metadata": metadata,
+            "listing_claims": listing_claims,
+            "forensics": forensics_results,
             "vision_analysis": vision_results,
             "assessment": assessment,
+            "audio_data": audio_data,
         }
+        
+        if listing_comparison:
+            result["listing_comparison"] = listing_comparison
+            
+        return result
+        
     finally:
         # Clean up temp file
         if os.path.exists(tmp_path):

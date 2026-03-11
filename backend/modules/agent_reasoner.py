@@ -62,7 +62,20 @@ def _get_model():
         print(f"[agent_reasoner] Vertex AI initialised (project={project}, location={location})")
         return _model
     except Exception as exc:
-        print(f"[agent_reasoner] Vertex AI init failed: {exc}")
+        print(f"[agent_reasoner] Vertex AI init failed: {exc}. Attempting google.generativeai fallback...")
+        try:
+            import google.generativeai as genai
+            api_key = os.getenv("GEMINI_API_KEY")
+            if api_key:
+                genai.configure(api_key=api_key)
+                _model = genai.GenerativeModel("gemini-2.5-flash")
+                _initialised = True
+                print("[agent_reasoner] Google Generative AI initialised via API Key.")
+                return _model
+        except Exception as exc2:
+            print(f"[agent_reasoner] Google Generative AI init failed: {exc2}")
+            
+        print("[agent_reasoner] All model initializations failed. Using rule-based fallback.")
         _initialised = True
         return None
 
@@ -72,9 +85,9 @@ def _get_model():
 # ---------------------------------------------------------------------------
 
 _SYSTEM_PROMPT = """\
-You are a Real Estate Fraud Investigator for TrustKit AI. Your job is to \
-analyze property tour data and determine whether a rental listing is \
-being represented honestly.
+You are a friendly, conversational Real Estate Fraud Investigator for TrustKit AI. \
+Your job is to analyze property tour data and give the user real-time feedback \
+on whether a listing is being represented honestly.
 
 You will receive two inputs:
 1. **Vision Data** — A JSON object from our Vision AI containing detected \
@@ -85,29 +98,27 @@ what the landlord is advertising.
 
 Your task:
 - Compare the vision data against the listing claims.
-- Look for inconsistencies (e.g., listing says "park view" but vision \
-shows "brick wall").
-- Check for suspicious elements flagged by the Vision AI (editing \
-artifacts, staging indicators, stock photos).
+- Look for inconsistencies.
+- Check for suspicious elements flagged by the Vision AI.
 - Evaluate the overall trustworthiness of the listing.
 
 Scoring rules:
 - trust_score ranges from 0 (confirmed scam) to 100 (perfectly safe).
-- If suspicious_elements are present, deduct 10-20 points per element \
-depending on severity.
+- If suspicious_elements are present, deduct 10-20 points per element.
 - If listing claims contradict the vision data, deduct 20-30 points.
 - If the image appears to not be a real property photo, score below 30.
-- Set alert to true if trust_score drops below 70 or if major \
-suspicious elements are found.
+- Set alert to true if trust_score drops below 70 or if major issues are found.
 
 Return EXACTLY this JSON schema:
 {"alert": bool, "message": "string", "trust_score": int}
 
 The "message" field must be a punchy, 1-sentence explanation of why \
-the score was given. Examples:
+the score was given. Do NOT use technical terms like "Vision Data", "JSON", "AI flagged", or "suspicious elements". 
+CRITICAL OUTWARD RULE: You are watching a LIVE VIDEO STREAM. Do NOT use the words "photo" or "image" in your response. Instead, say "camera", "video feed", "stream", or "what I'm seeing".
+Examples:
 - "Listing claims a park view, but the camera shows a brick wall."
-- "Image appears to be a stock photo, not an actual property image."
-- "Property matches the listing description with no red flags detected."
+- "This stream looks like someone pointing a camera at a computer screen, not a real property tour."
+- "The physical layout I'm seeing matches the listing description with no red flags detected."
 
 Return ONLY the JSON object, no extra text.
 """
@@ -286,45 +297,4 @@ def _rule_based_reason(
     }
 
 
-# ---------------------------------------------------------------------------
-# Backward-compatible wrapper
-# ---------------------------------------------------------------------------
-# Preserves the original API so existing imports in main.py and
-# deep_scan.py continue to work without changes:
-#   from modules.agent_reasoner import reason
 
-
-def reason(
-    vision_data: dict,
-    listing_claims: Optional[dict] = None,
-    metadata: Optional[dict] = None,
-) -> dict:
-    """Backward-compatible wrapper around evaluate_trust.
-
-    Converts the old dict-based listing_claims into a string and
-    delegates to evaluate_trust(). Also passes metadata for the
-    rule-based fallback.
-
-    Args:
-        vision_data: Scene description dict from vision_analyzer.
-        listing_claims: Optional dict of listing claims.
-        metadata: Optional forensic metadata dict (Deep Scan only).
-
-    Returns:
-        A dict with: alert (bool), message (str), trust_score (int).
-    """
-    # Convert dict claims to a readable string
-    claims_str = ""
-    if listing_claims:
-        claims_str = ", ".join(
-            f"{k}: {v}" for k, v in listing_claims.items()
-        )
-
-    result = evaluate_trust(vision_data, claims_str)
-
-    # If we used the fallback and have metadata, re-run with metadata
-    model = _get_model()
-    if model is None and metadata:
-        return _rule_based_reason(vision_data, claims_str, metadata)
-
-    return result
