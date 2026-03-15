@@ -115,6 +115,7 @@ Return EXACTLY this JSON schema:
 The "message" field must be a punchy, 1-sentence explanation of why \
 the score was given. Do NOT use technical terms like "Vision Data", "JSON", "AI flagged", or "suspicious elements". 
 CRITICAL OUTWARD RULE: You are watching a LIVE VIDEO STREAM. Do NOT use the words "photo" or "image" in your response. Instead, say "camera", "video feed", "stream", or "what I'm seeing".
+CRITICAL FRAUD RULE: You CANNOT verify a street address, city, or state purely from interior video footage. If the Listing Claims ONLY contain an address with no physical descriptive details to match against the video, you MUST NOT say "the video matches the claims". Instead, you must state that there are insufficient details to verify the property identity and deduct 20 points for missing verification data.
 Examples:
 - "Listing claims a park view, but the camera shows a brick wall."
 - "This stream looks like someone pointing a camera at a computer screen, not a real property tour."

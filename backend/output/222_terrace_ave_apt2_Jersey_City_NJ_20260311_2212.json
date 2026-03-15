@@ -1,0 +1,1031 @@
+[
+  {
+    "id": "a85138eae016bb5b",
+    "source_site": "facebook",
+    "scraped_at": "2026-03-11T22:11:36.400922Z",
+    "listing_url": "https://www.facebook.com/groups/765841576845364/posts/9252238364872267/",
+    "title": "Jersey City Roommates | 2 Beds 1 Bath - Apartment | Facebook",
+    "price": 700,
+    "price_raw": "$700/month",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": 2,
+      "bathrooms": 1.0,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "862 259 5072",
+      "agency": ""
+    },
+    "description": "2 Beds 1 Bath - Apartment\n\nJersey City, NJ 07307\n\n2 Beds 1 Bath - Apartment\n$700/month\nJersey City Heights , Terrace Ave \nImmediate move in available \n\nRoom for rent. 1 smaller bedroom in a 2 bed...",
+    "amenities": [
+      "patio",
+      "internet"
+    ],
+    "images": [
+      "https://scontent-lga3-3.xx.fbcdn.net/v/t39.30808-6/485882942_10162819877815802_1193213393354681581_n.jpg?stp=cp6_dst-jpg_tt6&cstp=mx1536x2048&ctp=p600x600&_nc_cat=106&ccb=1-7&_nc_sid=bb2ce1&_nc_ohc=__LLPn55sQAQ7kNvwH0ulcm&_nc_oc=AdniU3WCFO6wsscoWKOKSo3oJCTHS0zJr9YLvvDyz4hlM1HcXkMKWpt21E6CfBo1MsY&_nc_zt=23&_nc_ht=scontent-lga3-3.xx&_nc_gid=Gg90eKKqp36m0hTc8yBJdw&_nc_ss=8&oh=00_AfyU6QWN6FvdSGxGiwsfn5EXKZOk4oyRmQo56MnaEmPfjQ&oe=69B7C1AE"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "Apartment Jersey City, NJ 07307 2 Beds 1 Bath - Facebook",
+      "search_snippet": "Mar 23, 2025·Apt. Features combined living room / kitchen and also a patio. Rent is $700 + internet. Located in Jersey city heights. Ideal for students who ..."
+    }
+  },
+  {
+    "id": "f320b6388f731d07",
+    "source_site": "eichert",
+    "scraped_at": "2026-03-11T22:12:07.348914Z",
+    "listing_url": "https://www.weichert.com/129543207/",
+    "title": "16 Crossgate Rd # 2, Jersey City, NJ, 07305",
+    "price": 2000,
+    "price_raw": "$2,000",
+    "address": {
+      "full": "16 Crossgate Rd # 2,Jersey City,NJ 07305",
+      "street": "16 Crossgate Rd # 2",
+      "city": "Jersey City",
+      "state": "NJ",
+      "zip": "07305"
+    },
+    "details": {
+      "bedrooms": 0,
+      "bathrooms": 1.0,
+      "sqft": 900,
+      "property_type": "studio"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "800-401-0486",
+      "agency": ""
+    },
+    "description": "Apartment for rent  in Jersey City, NJ for $2,000 with 2 bedrooms and 1 full bath.  ",
+    "amenities": [],
+    "images": [
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004025-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260003566-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004193-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004194-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004201-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004218-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004228-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004235-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004258-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004268-1.jpg",
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/260004272-1.jpg"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "222 Terrace Ave Jersey City NJ for rent: MLS #250015846 | Weichert",
+      "search_snippet": "222TerraceAveis for rent inJerseyCityNJ. Learn more about therentallistingfor222TerraceAveinJerseyCity,NJ."
+    }
+  },
+  {
+    "id": "dfe1786024013053",
+    "source_site": "remax",
+    "scraped_at": "2026-03-11T22:12:20.829565Z",
+    "listing_url": "https://www.remax.com/usa/en/residential/property/bayonne/250-avenue-e-apt-313-bayonne-nj-07002/8716606847377960417?RID=M00000784-260003502",
+    "title": "250 AVENUE E APT 313, BAYONNE, NJ 07002",
+    "price": 2750,
+    "price_raw": "2750",
+    "address": {
+      "full": "250 AVENUE E APT 313,BAYONNE,NJ 07002",
+      "street": "250 AVENUE E APT 313",
+      "city": "BAYONNE",
+      "state": "NJ",
+      "zip": "07002"
+    },
+    "details": {
+      "bedrooms": 2,
+      "bathrooms": 2.0,
+      "sqft": 962,
+      "property_type": "house"
+    },
+    "contact": {
+      "name": "",
+      "email": "sigridamil@gmail.com",
+      "phone": "(201) 886-8888",
+      "agency": ""
+    },
+    "description": "Take a closer look at this $2,750, 2 bed, 2 bath, 962 Sq Ft, Rental for rent, located at 250 AVENUE E APT 313 in BAYONNE, NJ 07002.",
+    "amenities": [
+      "parking",
+      "garage",
+      "fitness",
+      "washer",
+      "dryer",
+      "laundry",
+      "dishwasher",
+      "a/c",
+      "rooftop",
+      "storage"
+    ],
+    "images": [
+      "https://images.remax.com/rets-properties-hudson/45b6981b3d8c4583b503111bc9429f52beeab8ce-1-medium.jpeg",
+      "@type",
+      "contentUrl",
+      "description"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "250 AVENUE E APT 313, BAYONNE, NJ 07002 | REMAX",
+      "search_snippet": "Mar 3, 2026·Take a closer look at this $2750, 2 bed, 2 bath, 962 Sq Ft, Rental for rent, located at 250 AVENUE E APT 313 in BAYONNE, NJ 07002."
+    }
+  },
+  {
+    "id": "71fee52e5b8ae72a",
+    "source_site": "remax",
+    "scraped_at": "2026-03-11T22:12:09.863056Z",
+    "listing_url": "https://www.remax.com/usa/en/residential/property/bayonne/250-avenue-e-apt-617-bayonne-nj-07002/16542424643243107788?RID=M00000784-260003510",
+    "title": "250 AVENUE E APT 617, BAYONNE, NJ 07002",
+    "price": 2800,
+    "price_raw": "2800",
+    "address": {
+      "full": "250 AVENUE E APT 617,BAYONNE,NJ 07002",
+      "street": "250 AVENUE E APT 617",
+      "city": "BAYONNE",
+      "state": "NJ",
+      "zip": "07002"
+    },
+    "details": {
+      "bedrooms": 2,
+      "bathrooms": 2.0,
+      "sqft": 852,
+      "property_type": "house"
+    },
+    "contact": {
+      "name": "",
+      "email": "joaopereira@remax.net",
+      "phone": "(908) 282-1234",
+      "agency": ""
+    },
+    "description": "Take a closer look at this $2,800, 2 bed, 2 bath, 852 Sq Ft, Rental for rent, located at 250 AVENUE E APT 617 in BAYONNE, NJ 07002.",
+    "amenities": [
+      "parking",
+      "garage",
+      "fitness",
+      "washer",
+      "dryer",
+      "laundry",
+      "a/c",
+      "rooftop",
+      "storage"
+    ],
+    "images": [
+      "https://images.remax.com/rets-properties-hudson/41dc9277e1647ace13d47a5913d5108f2dfd433e-1-medium.jpeg",
+      "@type",
+      "contentUrl",
+      "description"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "250 AVENUE E APT 617, BAYONNE, NJ 07002 | REMAX",
+      "search_snippet": "Mar 3, 2026·Take a closer look at this $2800, 2 bed, 2 bath, 852 Sq Ft, Rental for rent, located at 250 AVENUE E APT 617 in BAYONNE, NJ 07002."
+    }
+  },
+  {
+    "id": "aa84ee2636f5b681",
+    "source_site": "byowner",
+    "scraped_at": "2026-03-11T22:11:56.068007Z",
+    "listing_url": "https://www.byowner.com/rental/houses-apartments-for-rent/222-terrace-ave-jersey-city-nj-07307-250015846",
+    "title": "For Rent By Private Owner - 827 Homes in Jersey City, NJ",
+    "price": 3950,
+    "price_raw": "$3,950Condo For Rent",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": 1,
+      "bathrooms": 1.0,
+      "sqft": 859,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "We feature 827 homes for rent by owner in Jersey City, NJ. Browse rental listings, find your perfect home and get in touch with a landlord.",
+    "amenities": [],
+    "images": [
+      "https://www.byowner.com/public/images/logo-600x315.png"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "222 Terrace Ave For Rent, Jersey City, NJ 07307 | ByOwner",
+      "search_snippet": "Property for rent located at222TerraceAve,JerseyCity, NewJersey07307 available on ByOwner.com. Check out all of the details and contact with the owner."
+    }
+  },
+  {
+    "id": "39695d81f4b32e34",
+    "source_site": "hotpads",
+    "scraped_at": "2026-03-11T22:12:29.635478Z",
+    "listing_url": "https://hotpads.com/122-terrace-ave-jersey-city-nj-07307-1j8vhzb/2/pad",
+    "title": "122 Terrace Ave Apt 2, Jersey City, NJ 07307 | HotPads",
+    "price": 4300,
+    "price_raw": "$4,300",
+    "address": {
+      "full": "122 Terrace Ave #2Jersey City, NJ 07307",
+      "street": "122 Terrace Ave #2Jersey City",
+      "city": "NJ 07307",
+      "state": "NJ",
+      "zip": "07307"
+    },
+    "details": {
+      "bedrooms": 3,
+      "bathrooms": 2.5,
+      "sqft": 1831,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "support@hotpads.com",
+      "phone": "(917) 853-3232",
+      "agency": ""
+    },
+    "description": "Condo for rent at 122 Terrace Ave. View property details, photos, street view, and get real-time updates with the largest and most trusted rental site.",
+    "amenities": [
+      "parking",
+      "washer",
+      "dryer",
+      "dishwasher",
+      "a/c",
+      "rooftop"
+    ],
+    "images": [
+      "https://photos.zillowstatic.com/fp/9ef1e54fa5aef2f3bbc4ebc378c81062-rentals_thumb_180_180.webp"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "122TerraceAveApt2,JerseyCity,NJ07307 | HotPads",
+      "search_snippet": "Condoforrentat 122TerraceAve. View property details, photos, street view, and get real-time updates with the largest and most trustedrentalsite."
+    }
+  },
+  {
+    "id": "c176877a6bbe6f9e",
+    "source_site": "zillow",
+    "scraped_at": "2026-03-11T22:12:02.971703Z",
+    "listing_url": "https://www.zillow.com/homedetails/222-Terrace-Ave-Jersey-City-NJ-07307/38899532_zpid/",
+    "title": "222 Terrace Ave, Jersey City, NJ 07307 | Zillow",
+    "price": 5215,
+    "price_raw": "$5,215/mo",
+    "address": {
+      "full": "222 Terrace Ave, Jersey City, NJ 07307",
+      "street": "222 Terrace Ave",
+      "city": "Jersey City",
+      "state": "NJ",
+      "zip": "07307"
+    },
+    "details": {
+      "bedrooms": 3,
+      "bathrooms": 2.0,
+      "sqft": null,
+      "property_type": "room"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "222 Terrace Ave, Jersey City NJ, is a Single Family home.It contains 3 bedrooms and 2 bathrooms.\n \nThe Zestimate for this Single Family is $788,800.The Rent Zestimate for this Single Family is $3,287/mo.",
+    "amenities": [],
+    "images": [
+      "https://photos.zillowstatic.com/fp/168f7c40407c5c9eb21a58612eee8e99-cc_ft_1536.jpg"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [
+      {
+        "type": "cross_site_duplicate",
+        "sites": [
+          "compass",
+          "zillow"
+        ],
+        "note": "Same address listed on multiple sites — verify details match"
+      }
+    ],
+    "raw_extras": {
+      "search_title": "222 Terrace Ave, Jersey City, NJ 07307 | Zillow",
+      "search_snippet": "222TerraceAve,JerseyCity,NJ07307 is currently not for sale. The -- sqft single family home is a 3 beds, 2 baths property. This home was built in null and last sold on 2025-10-09 for $2,600. View more property details, sales history, and Zestimate data on Zillow."
+    }
+  },
+  {
+    "id": "68b1b03ea12d37d9",
+    "source_site": "trulia",
+    "scraped_at": "2026-03-11T22:12:29.277631Z",
+    "listing_url": "https://www.trulia.com/for_rent/NJ/",
+    "title": "Apartments For Rent in New Jersey - 30,714 Rentals | Trulia",
+    "price": 6495,
+    "price_raw": "$6,495/mo",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": 0,
+      "bathrooms": 3.0,
+      "sqft": null,
+      "property_type": "studio"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "Search 30,714 Apartments & Rental Properties in New Jersey. Explore rentals by neighborhoods, schools, local guides and more on Trulia!",
+    "amenities": [
+      "pet friendly"
+    ],
+    "images": [
+      "https://www.trulia.com/images/logos/standardized/v4/logo-with-icon-200x200.png"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "ApartmentsForRentinNewJersey- 30,705Rentals| Trulia",
+      "search_snippet": "Search 30,705 Apartments &RentalProperties inNewJersey. Explorerentalsby neighborhoods, schools, local guides and more on Trulia!JerseyCity,NJApartmentsForRent. See All."
+    }
+  },
+  {
+    "id": "48de07222616c89d",
+    "source_site": "zillow",
+    "scraped_at": "2026-03-11T22:12:08.433598Z",
+    "listing_url": "https://www.zillow.com/homedetails/222-1st-St-8-Jersey-City-NJ-07302/2079835545_zpid/",
+    "title": "222 1st St #8, Jersey City, NJ 07302 | Zillow",
+    "price": 7128,
+    "price_raw": "$7,128/mo",
+    "address": {
+      "full": "222 1st St #8, Jersey City, NJ 07302",
+      "street": "222 1st St #8",
+      "city": "Jersey City",
+      "state": "NJ",
+      "zip": "07302"
+    },
+    "details": {
+      "bedrooms": 2,
+      "bathrooms": 2.0,
+      "sqft": 1231,
+      "property_type": "room"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "222 1st St #8, Jersey City NJ, is a Multiple Occupancy home that contains 1231 sq ft.It contains 2 bedrooms and 2 bathrooms.\n \nThe Zestimate for this Multiple Occupancy is $1,078,200.The Rent Zestimate for this Multiple Occupancy is $4,029/mo.",
+    "amenities": [
+      "washer",
+      "dryer",
+      "laundry",
+      "dishwasher",
+      "hardwood",
+      "balcony"
+    ],
+    "images": [
+      "https://photos.zillowstatic.com/fp/285ae496f02cd1e086bc8da3e7fda6d5-cc_ft_1536.jpg"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "222 1st St #8, Jersey City, NJ 07302 | Zillow",
+      "search_snippet": "222 1st St #8, Jersey City, NJ 07302 is currently not for sale. The 1231 Square Feet multi family home is a 2 beds, 2 baths property.Missing:ave| Show results with:ave"
+    }
+  },
+  {
+    "id": "0716045edac6db8a",
+    "source_site": "redfin",
+    "scraped_at": "2026-03-11T22:12:15.342048Z",
+    "listing_url": "https://www.redfin.com/NJ/Jersey-City/260-Ogden-Ave-07307/home/36518805",
+    "title": "260 OGDEN Ave, Jersey City, NJ 07307 - 3 beds/2 baths",
+    "price": 971053,
+    "price_raw": "$971,053Est. refi payment",
+    "address": {
+      "full": "129 Thorne St, Jersey City, NJ 07307",
+      "street": "129 Thorne St",
+      "city": "Jersey City",
+      "state": "NJ",
+      "zip": "07307"
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": 2.0,
+      "sqft": 1484,
+      "property_type": "condo"
+    },
+    "contact": {
+      "name": "",
+      "email": "ashafran@libertyrealty.com",
+      "phone": "201-222-2900",
+      "agency": ""
+    },
+    "description": "(HCMLS) 3 beds, 2 baths, 1484 sq. ft. house located at 260 OGDEN Ave, Jersey City, NJ 07307 sold for $880,000 on Aug 27, 2021. MLS# 210011401. Welcome to this charming 1870&rsquo;S one family brick row hom...",
+    "amenities": [],
+    "images": [
+      "https://ssl.cdn-redfin.com/photo/125/mbpaddedwide/401/genMid.210011401_3.jpg"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "260 OGDEN Ave, Jersey City, NJ 07307 - Redfin",
+      "search_snippet": "3 beds, 2 baths, 1484 sq. ft. house located at 260 OGDEN Ave, Jersey City, NJ 07307 sold for $880000 on Aug 27, 2021. MLS# 210011401."
+    }
+  },
+  {
+    "id": "6013cfcd282c4f1f",
+    "source_site": "apartments",
+    "scraped_at": "2026-03-11T22:11:36.401468Z",
+    "listing_url": "https://www.apartments.com/5-br-2-bath-105-rose-ter-apt-2-newark-nj-unit-apt-2/8vmbf80/",
+    "title": "Access Denied",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "",
+    "amenities": [],
+    "images": [],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "105 Rose Terrace Unit Apt 2, Newark, NJ 07108 - Room for Rent in ...",
+      "search_snippet": "(201) 733-8200 x110 - Large renovated Apartment!!! New kitchen with granite countertops stainless steel stove, nice big living space, with large bathroom, 2 big ..."
+    }
+  },
+  {
+    "id": "be8260ef77bebfd3",
+    "source_site": "compass",
+    "scraped_at": "2026-03-11T22:11:41.739657Z",
+    "listing_url": "https://www.compass.com/listing/222-terrace-avenue-jersey-city-nj-07307/1936507014667564889/",
+    "title": "222 Terrace Ave, Jersey City, NJ 07307 | MLS #250019669 | Compass",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "222 Terrace Ave, Jersey City, NJ 07307",
+      "street": "222 Terrace Ave",
+      "city": "Jersey City",
+      "state": "NJ",
+      "zip": "07307"
+    },
+    "details": {
+      "bedrooms": 3,
+      "bathrooms": 2.0,
+      "sqft": null,
+      "property_type": ""
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "212-913-9058",
+      "agency": ""
+    },
+    "description": "222 Terrace Ave, Jersey City, NJ 07307 is a property not currently listed. This is a 3-bed, 2-bath property.",
+    "amenities": [],
+    "images": [
+      "https://www.compass.com/ucfe-assets/public-media/ogImage-listingPage-missingPhotography.jpg"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [
+      {
+        "type": "cross_site_duplicate",
+        "sites": [
+          "compass",
+          "zillow"
+        ],
+        "note": "Same address listed on multiple sites — verify details match"
+      }
+    ],
+    "raw_extras": {
+      "search_title": "222 Terrace Ave, Jersey City, NJ 07307 | MLS #250019669 | Compass",
+      "search_snippet": "222TerraceAve,JerseyCity,NJ07307 is a property listed available forrentat $2,600. This is a 3-bed, 2-bath property."
+    }
+  },
+  {
+    "id": "205bef6ae20214a2",
+    "source_site": "zillow",
+    "scraped_at": "2026-03-11T22:11:44.302150Z",
+    "listing_url": "https://www.zillow.com/b/222-terrace-ave-jersey-city-nj-974JFV/",
+    "title": "222 Terrace Ave Jersey City NJ | Zillow",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": ",,",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": 0,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "studio"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "222 Terrace Ave, Jersey City, NJ 07307",
+    "amenities": [
+      "bike"
+    ],
+    "images": [
+      "https://maps.googleapis.com/maps/api/staticmap?center=40.753959254224,-74.05487721073&zoom=17&size=768x576&maptype=satellite&key=AIzaSyD3b0WRWC4TBB4y3ksMtwpyV6FABvaIF7c&signature=COszfb0loXTnWkPaFkKl3GVgdqU="
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "222 Terrace Ave Jersey City NJ | Zillow",
+      "search_snippet": "View 1 units for222TerraceAveJerseyCityNJ| Zillow, as well as Zestimates and nearby comps. Find the perfect place to live."
+    }
+  },
+  {
+    "id": "d65d2e993353c932",
+    "source_site": "corcoran",
+    "scraped_at": "2026-03-11T22:11:48.601683Z",
+    "listing_url": "https://www.corcoran.com/listing/for-rent/222-terrace-ave-jc-heights-nj-07307/99004757/regionId/130",
+    "title": "404",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "590 Madison Avenue New York, NY 10022|800.544.4055|212.355.3550|Fax: 212.832.0248|info@corcoran.com",
+      "street": "590 Madison Avenue New York",
+      "city": "NY 10022|800.544.4055|212.355.3550|Fax: 212.832.0248|info@corcoran.com",
+      "state": "NY",
+      "zip": "10022"
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": ""
+    },
+    "contact": {
+      "name": "",
+      "email": "info@corcoran.com",
+      "phone": "800.544.4055",
+      "agency": ""
+    },
+    "description": "Corcoran and the Corcoran logos are trademarks of Corcoran Group LLC. The Corcoran® System is comprised of company owned offices which are owned by a subsidiary of Anywhere Real Estate Inc. and franchised offices which are independently owned and operated. The Corcoran System fully supports the principles of the Fair Housing Act and the Equal Opportunity Act. Listing information is deemed reliable, but is not guaranteed.",
+    "amenities": [],
+    "images": [
+      "https://media.umbraco.io/corcoran-heartcore/cjol4uzj/error.png?w=3840&q=75",
+      "https://api.sfnix.net/api/tracker?url=https%3A%2F%2Fwww.corcoran.com%2Flisting%2Ffor-rent%2F222-terrace-ave-jc-heights-nj-07307%2F99004757%2FregionId%2F130&source=&time=1773267113292"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [
+      {
+        "type": "cross_site_duplicate",
+        "sites": [
+          "corcoran",
+          "corcoran"
+        ],
+        "note": "Same address listed on multiple sites — verify details match"
+      }
+    ],
+    "raw_extras": {
+      "search_title": "222 TERRACE AVE, JC, Heights, NJ 07307 Property for rent",
+      "search_snippet": "Located in the vibrant Heights neighborhood ofJerseyCity, this beautiful 3-bedroom, 2-bathroomapartmentoffers the ultimate in convenience and comfort. The sunlit unit comes complete with all essential furniture and appliances, so you can move right in. Enjoy the ease of having a washer and dryer on-site and ALL utilities included in your rent."
+    }
+  },
+  {
+    "id": "990f7d7311859691",
+    "source_site": "prestigepropertygrp",
+    "scraped_at": "2026-03-11T22:11:54.782279Z",
+    "listing_url": "https://www.prestigepropertygrp.com/property/102-250019669-222-Terrace-Ave-Jersey-City-NJ-07307",
+    "title": "Prestige Property Group Montclair",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "condo"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "201-627-5071",
+      "agency": ""
+    },
+    "description": "An off market listing, from Prestige Property Group Montclair",
+    "amenities": [],
+    "images": [
+      "https://d36xftgacqn2p.cloudfront.net/listingphotos102/250019669-1.jpg"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "222 Terrace Ave, Jersey City, NJ, 07307 - Photos, Videos & More!",
+      "search_snippet": "Learn more about thisRentallocated at222TerraceAvewhich has 3 Beds, 2 Baths and has been on the market for 15 Days. Photos, Maps and Videos!"
+    }
+  },
+  {
+    "id": "5668e13aea27af26",
+    "source_site": "foxroach",
+    "scraped_at": "2026-03-11T22:12:00.961347Z",
+    "listing_url": "https://www.foxroach.com/realestate/details/56989452/222-terrace-ave-jc-heights-nj-07307",
+    "title": "222 TERRACE AVEJERSEY CITY, NJ 07307",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "222 TERRACE AVEJERSEY CITY, NJ 07307Residential · RAISED RANCH · 2 Beds · 0.06 Acres · Year Built: 1920",
+      "street": "222 TERRACE AVEJERSEY CITY",
+      "city": "NJ 07307Residential · RAISED RANCH · 2 Beds · 0.06 Acres · Year Built: 1920",
+      "state": "NJ",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": 2,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "condo"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "866.486.5636",
+      "agency": ""
+    },
+    "description": "Real estate in Philadelphia, PA, NJ, DE & MD. BHHS Fox & Roach offers full real estate services including mortgage, new homes, insurance, market analysis.",
+    "amenities": [],
+    "images": [
+      "https://content.mediastg.net/dynamic/RealEstate/company/242/account/131737/131737_02022023214001.jpg",
+      "https://content.mediastg.net/dyna_images/ImageLibrary/e/d/b/3/edb3b3bd-a6b7-4361-bbcd-8b283dac695e.png",
+      "https://content.mediastg.net/dyna_images/ImageLibrary/f/9/8/9/f9890f85-f210-4592-ac8f-b02580b54ac2.jpg",
+      "https://content.mediastg.net/media/global/search/TaxData-LDP.png",
+      "https://content.mediastg.net/media/global/search/map-button-bg.png",
+      "https://content.mediastg.net/dyna_images/ImageLibrary/3/5/9/2/3592b648-1d74-4896-8a10-3188c88bd39b.pngx",
+      "//bat.bing.com/action/0?ti=5105807&Ver=2",
+      "https://api.sfnix.net/api/tracker?url=https%3A%2F%2Fwww.foxroach.com%2Frealestate%2Fdetails%2F56989452%2F222-terrace-ave-jc-heights-nj-07307&source=&time=1773267124285",
+      "https://bat.bing.com/action/0?ti=5105807&Ver=2&mid=f9b0e5f5-9f37-46c9-929e-231194328e0b&bo=1&sid=55f626e01d9711f1a6b269f142fb0075&vid=55f621901d9711f1be98b965b6f8ebbb&vids=1&msclkid=N&uach=pv%3D10.0&pi=2083220816&lg=en-US&sw=1920&sh=1080&sc=32&tl=Tax%20Data%3A%20222%20TERRACE%20AVE,%20JERSEY%20CITY,%20NJ%2007307&p=https%3A%2F%2Fwww.foxroach.com%2Frealestate%2Fdetails%2F56989452%2F222-terrace-ave-jc-heights-nj-07307&r=&lt=1642&evt=pageLoad&sv=2&cdb=AQER&rn=335831"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "222 TERRACE AVE, JC, Heights, NJ 07307 | MLS #250019669 | Berkshire ...",
+      "search_snippet": "For Rent: 3 beds, 2 baths, ,222TERRACEAVE, JC, Heights,NJ07307 is a Single Family Residence home listed at $2,600, MLS #250019669"
+    }
+  },
+  {
+    "id": "d519a9bf9292e4ea",
+    "source_site": "corcoran",
+    "scraped_at": "2026-03-11T22:12:01.576927Z",
+    "listing_url": "https://www.corcoran.com/listing/for-rent/222-terrace-ave-jc-heights-nj-07307/100463153/regionId/130",
+    "title": "404",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "590 Madison Avenue New York, NY 10022|800.544.4055|212.355.3550|Fax: 212.832.0248|info@corcoran.com",
+      "street": "590 Madison Avenue New York",
+      "city": "NY 10022|800.544.4055|212.355.3550|Fax: 212.832.0248|info@corcoran.com",
+      "state": "NY",
+      "zip": "10022"
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": ""
+    },
+    "contact": {
+      "name": "",
+      "email": "info@corcoran.com",
+      "phone": "800.544.4055",
+      "agency": ""
+    },
+    "description": "Corcoran and the Corcoran logos are trademarks of Corcoran Group LLC. The Corcoran® System is comprised of company owned offices which are owned by a subsidiary of Anywhere Real Estate Inc. and franchised offices which are independently owned and operated. The Corcoran System fully supports the principles of the Fair Housing Act and the Equal Opportunity Act. Listing information is deemed reliable, but is not guaranteed.",
+    "amenities": [],
+    "images": [
+      "https://media.umbraco.io/corcoran-heartcore/cjol4uzj/error.png?w=3840&q=75",
+      "https://api.sfnix.net/api/tracker?url=https%3A%2F%2Fwww.corcoran.com%2Flisting%2Ffor-rent%2F222-terrace-ave-jc-heights-nj-07307%2F100463153%2FregionId%2F130&source=&time=1773267124875"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [
+      {
+        "type": "cross_site_duplicate",
+        "sites": [
+          "corcoran",
+          "corcoran"
+        ],
+        "note": "Same address listed on multiple sites — verify details match"
+      }
+    ],
+    "raw_extras": {
+      "search_title": "222 TERRACE AVE, JC, Heights, NJ 07307 Property for rent",
+      "search_snippet": "Corcoran offers luxury apartments & homes for rent in NewJersey. Visit our site to get details on222TERRACEAVEHudson, The Heights,NJ07307."
+    }
+  },
+  {
+    "id": "bd3ce5a86fe9e6c8",
+    "source_site": "facebook",
+    "scraped_at": "2026-03-11T22:12:19.438788Z",
+    "listing_url": "https://www.facebook.com/groups/311315328976324/posts/25829867046694468/?locale=en_US",
+    "title": "Houses and Apartments for Rent | 🚫No broker fee💰 | Facebook",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "9 Bentley Ave, Jersey City, NJ 07304",
+      "street": "9 Bentley Ave",
+      "city": "Jersey City",
+      "state": "NJ",
+      "zip": "07304"
+    },
+    "details": {
+      "bedrooms": 3,
+      "bathrooms": 1.0,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "🚫No broker fee💰\n\n📍9 Bentley Ave, \nJersey City, NJ 07304\n\n🚗Off street parking available for an extra fee.\n\nIncluded in the rent:\n🔥Heat\n💦Hot water\n\nTenant pays:\n⛽️Gas\n💡Electricity \n\n💰1 month & a half...",
+    "amenities": [
+      "parking",
+      "storage"
+    ],
+    "images": [
+      "https://scontent-lga3-1.xx.fbcdn.net/v/t39.30808-6/638870186_2727096047657833_6245357790421474477_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=p600x600&_nc_cat=102&ccb=1-7&_nc_sid=bb2ce1&_nc_ohc=2zH8qptk1eQQ7kNvwECIIrG&_nc_oc=AdlAjjPHC4IVbg5_XZvnBU5lpOew1NZJeRjYYYT_mcoD0l17_hkR-w1EAMRYPvzEhsQ&_nc_zt=23&_nc_ht=scontent-lga3-1.xx&_nc_gid=j5EdrlIeJKCNPOFw5Z3UNw&_nc_ss=8&oh=00_Afzd7EF31uL3XQ2CQ4Ip6fJ1bYgkKVqiWcZlKVVv1zVbHw&oe=69B7BB88"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "No broker fee 9 Bentley Ave, Jersey City, NJ 07304 Off street parking ...",
+      "search_snippet": "Feb 21, 2026·Apartment for Rent in Jersey City, NJ with 1 Bedroom and 1 Bathroom ... Ave, APT 2, Jersey City, NJ 07307 Move-in ready! Contact 973-510 ..."
+    }
+  },
+  {
+    "id": "6c6ef22c5821fe87",
+    "source_site": "apartmentguide",
+    "scraped_at": "2026-03-11T22:12:37.283585Z",
+    "listing_url": "https://www.apartmentguide.com/apartments/New-Jersey/Jersey-City/2-beds-1z141y8/",
+    "title": "Jasmin Terrace",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "313 Pine St,Jersey City,New Jersey 07304",
+      "street": "313 Pine St",
+      "city": "Jersey City",
+      "state": "",
+      "zip": "07304"
+    },
+    "details": {
+      "bedrooms": 0,
+      "bathrooms": 1.0,
+      "sqft": 823,
+      "property_type": "studio"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "(551) 412-4098",
+      "agency": ""
+    },
+    "description": "Find 2 bedroom apartments for rent in Jersey City, New Jersey by comparing ratings and reviews. The perfect 2 bed apartment is easy to find with Apartment Guide.",
+    "amenities": [
+      "gym",
+      "pet friendly",
+      "washer",
+      "dishwasher",
+      "hardwood",
+      "patio"
+    ],
+    "images": [
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/bfb02a4e04ca9e0d76d0689c9c142d32",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/94d99064deb36e9703f8993920dff690",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/a5e11425c27e0a0454814af8a4f39b25",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/0875be0524569f92c1f3a40652cfd703",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/81a398b776358f9917bbf9599da4cb55",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/5a0de0d0bb8759e404b8875f4d33a088",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/43a90dc95ee65344596b72a96e662699",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/a9fe5a8ebaf9c284b58a8b0f7bd55f7f",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/7c73e5917e89d812c879d9ff61c8b73b",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/3033ed6764984177f8f2ba2d7752150c",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/7015c7d2f846313fe1c931c74109df0e",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/a24adcc135fbc8dde8fd7768918f2366",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/f489fa63b70d42d26530bb738a4550bf",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/23dfdefff1f534a61d439f25f19b1c6b",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/efa4856633701dcdfbd4bd6c1abb21db",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/c0d1e2d3e7993000f56f8b3e205c16aa",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/dce6a1ca37d9afca724ecbf8bdee778d",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/7ba79081015bf97e02ff2ad86b2e7404",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/1e4d8380ffb1485886a07318596de2b7",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/af70fba84716ec0d6f6d434434e82f75",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/8a52637539d71e7b5ce9225655f892ab",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/a02f891e1983eb666af167081b78fa5e",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/d2253f697b3d84aae699ae1418140e8e",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/9dd33b9fd77bb8e0989f528a383aaa46",
+      "https://i.apartmentguide.com/t_3x2_fixed_webp_lg/704c140220fff8dba2412750f8a544e9"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "2 Bedroom ApartmentsforRentinJerseyCity,NJ| 2798Rentals",
+      "search_snippet": "1 MalloryAveJerseyCity,NJ07305. Pet Friendly • Dishwasher • Gym.Fireplace Apartments inJerseyCity.JerseyCity,NJRoomsForRent."
+    }
+  }
+]

@@ -30,7 +30,9 @@ export default function LiveCopilot() {
     const [status, setStatus] = useState<string>("Idle");
 
     // ── Listing details input ─────────────────────────────────────
-    const [listingAddress, setListingAddress] = useState("");
+    const [listingStreet, setListingStreet] = useState("");
+    const [listingUnit, setListingUnit] = useState("");
+    const [listingLocality, setListingLocality] = useState("");
     const [listingDescription, setListingDescription] = useState("");
 
     // ── Capture a frame from the video → binary Blob ──────────────
@@ -84,9 +86,18 @@ export default function LiveCopilot() {
                 setRunning(true);
 
                 // Send listing details as the FIRST message (JSON text)
+                // Combine the new distinct address fields into one string for the backend scraper
+                const addressParts = [
+                    listingStreet.trim(),
+                    listingUnit.trim() ? `Unit ${listingUnit.trim()}` : "",
+                    listingLocality.trim()
+                ].filter(Boolean);
+                
+                const combinedAddress = addressParts.join(", ");
+
                 const config = {
                     type: "config",
-                    listing_address: listingAddress.trim(),
+                    listing_address: combinedAddress,
                     listing_description: listingDescription.trim(),
                 };
                 ws.send(JSON.stringify(config));
@@ -144,7 +155,7 @@ export default function LiveCopilot() {
             console.error(err);
             setStatus("Camera access denied");
         }
-    }, [captureAndSend, listingAddress, listingDescription]);
+    }, [captureAndSend, listingStreet, listingUnit, listingLocality, listingDescription]);
 
     // ── Stop pipeline ─────────────────────────────────────────────
     const stop = useCallback(() => {
@@ -193,27 +204,61 @@ export default function LiveCopilot() {
 
             {/* ── Listing Details Input ───────────────────────────── */}
             {!running && (
-                <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+                <div className="space-y-4 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
                     <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                         Listing Details
                     </h3>
-                    <input
-                        type="text"
-                        placeholder="Listing address (e.g., 123 Main St, Apt 4B, NYC)"
-                        value={listingAddress}
-                        onChange={(e) => setListingAddress(e.target.value)}
-                        className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
-                    />
-                    <textarea
-                        placeholder="Paste the listing description or let TrustKit auto-fetch it from Zillow using the address above."
-                        value={listingDescription}
-                        onChange={(e) => setListingDescription(e.target.value)}
-                        rows={3}
-                        className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
-                    />
-                    <p className="text-xs text-slate-500">
-                        Enter the address — TrustKit will automatically look up the listing on Zillow.
-                    </p>
+                    
+                    {/* Address Fields */}
+                    <div className="grid gap-3 md:grid-cols-2">
+                        <div className="md:col-span-2">
+                            <label className="mb-1.5 block text-xs font-medium text-slate-400">Street Address</label>
+                            <input
+                                type="text"
+                                placeholder="e.g., 195 Webster Ave"
+                                value={listingStreet}
+                                onChange={(e) => setListingStreet(e.target.value)}
+                                className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="mb-1.5 block text-xs font-medium text-slate-400">Apt / Unit (Optional)</label>
+                            <input
+                                type="text"
+                                placeholder="e.g., Apt 4B"
+                                value={listingUnit}
+                                onChange={(e) => setListingUnit(e.target.value)}
+                                className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="mb-1.5 block text-xs font-medium text-slate-400">City, State ZIP</label>
+                            <input
+                                type="text"
+                                placeholder="e.g., Jersey City NJ"
+                                value={listingLocality}
+                                onChange={(e) => setListingLocality(e.target.value)}
+                                className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Description Area */}
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-400">Description or Claims</label>
+                        <textarea
+                            placeholder="Paste the listing description or let TrustKit auto-fetch it from online using the address above."
+                            value={listingDescription}
+                            onChange={(e) => setListingDescription(e.target.value)}
+                            rows={3}
+                            className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
+                        />
+                        <p className="mt-2 text-xs text-slate-500">
+                            Enter the address — TrustKit will automatically look up the listing on online platforms to compare claims against the live video.
+                        </p>
+                    </div>
                 </div>
             )}
 

@@ -1,0 +1,579 @@
+[
+  {
+    "id": "3f8d6d86ddfea60f",
+    "source_site": "zillow",
+    "scraped_at": "2026-03-11T21:54:09.099570Z",
+    "listing_url": "https://www.zillow.com/b/235-2nd-st-jersey-city-nj-5g7cXc/",
+    "title": "235 2nd St Jersey City NJ | Zillow",
+    "price": 2500,
+    "price_raw": "$2,500Fees may apply",
+    "address": {
+      "full": ",,",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": 0,
+      "bathrooms": 1.0,
+      "sqft": 702,
+      "property_type": "studio"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "Welcome to this beautifully renovated apartment in the heart of Downtown Jersey City! Nestled just steps away from vibrant farmers markets, top-rated restaurants, and convenient transit options, this modern home offers the perfect blend of style and accessibility.\n\nInside, you'll find an updated kitchen with sleek cabinetry, stainless steel appliances, and contemporary finishes, making it a dream for cooking and entertaining. The spacious bathroom has been fully upgraded with elegant fixtures and a modern design. Enjoy the comfort of new HVAC units and the convenience of a walk-in closet, perfect for ample storage.\n\nRecessed lighting throughout enhances the apartment's open and airy feel, while the generously sized bathroom adds a touch of luxury. Whether you're commuting to NYC or exploring the local scene, this apartment is a prime opportunity to experience the best of Jersey City living.",
+    "amenities": [
+      "storage"
+    ],
+    "images": [
+      "https://photos.zillowstatic.com/fp/cca4d6abe97d9509907e7659dee34bc2-cc_ft_384.webp"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 2nd St Jersey City NJ | Zillow",
+      "search_snippet": "View 10 pictures of the 5 units for2352ndStJerseyCityNJ| Zillow, as well as Zestimates and nearby comps. Find the perfect place to live."
+    }
+  },
+  {
+    "id": "e6dfe443ff05c1d5",
+    "source_site": "rentcafe",
+    "scraped_at": "2026-03-11T21:55:00.934382Z",
+    "listing_url": "https://www.rentcafe.com/apartments/nj/jersey-city/235-grand/default.aspx",
+    "title": "235 Grand Apartments, 235 Grand Street, Jersey City, NJ - RentCafe",
+    "price": 2875,
+    "price_raw": "From $2,875",
+    "address": {
+      "full": "235 Grand Street, Jersey City, NJ 07302",
+      "street": "235 Grand Street",
+      "city": "Jersey City",
+      "state": "NJ",
+      "zip": "07302"
+    },
+    "details": {
+      "bedrooms": 0,
+      "bathrooms": 2.0,
+      "sqft": null,
+      "property_type": "studio"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "See floor plans, photos & amenities at 235 Grand. Apartments priced from $2,875 ? Studio-2 Beds ? Contact the property directly",
+    "amenities": [
+      "pool",
+      "pets allowed",
+      "washer",
+      "dryer",
+      "storage"
+    ],
+    "images": [
+      "https://cdngeneral.rentcafe.com/dmslivecafe/2/83862/190607_235Grand_Interiors_0019-1.jpg?width=1024&quality=90"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 Grand Apartments, 235 Grand Street, Jersey City, NJ - RentCafe",
+      "search_snippet": "See floor plans, photos & amenities at 235 Grand. Apartments pricedfrom $2,885? Studio-2 Beds ? Contact the property directly"
+    }
+  },
+  {
+    "id": "b703e38c2d067a76",
+    "source_site": "apartments",
+    "scraped_at": "2026-03-11T21:54:09.099296Z",
+    "listing_url": "https://www.apartments.com/233-235-2nd-st-jersey-city-nj/zwm2n0z/",
+    "title": "Access Denied",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "",
+    "amenities": [],
+    "images": [],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "233-235 2nd St, Jersey City, NJ 07302 - Apartments in Jersey City, NJ | Apartments.com",
+      "search_snippet": "January 17, 2025 -See all available apartments for rent at 233-235 2nd St in Jersey City, NJ. 233-235 2nd St has rental units ."
+    }
+  },
+  {
+    "id": "1b6809010eea347f",
+    "source_site": "zillow",
+    "scraped_at": "2026-03-11T21:54:19.515283Z",
+    "listing_url": "https://www.zillow.com/b/235-grand-jersey-city-nj-65hTd9/",
+    "title": "235 Grand - 235 Grand St Jersey City NJ (2 units available) | Zillow",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": ",,",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": 0,
+      "bathrooms": 1.0,
+      "sqft": null,
+      "property_type": "studio"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "Positioned in a cozy pocket of Jersey City's Historic Downtown, 235 Grand seamlessly unites contemporary design with this neighborhood's vibrant history. Just blocks from the Hudson River waterfront, 235 Grand provides thoughtfully designed apartments, robust events programming, and elevated amenities to an unparalleled corner of Jersey City.",
+    "amenities": [
+      "parking",
+      "pool",
+      "in-unit laundry",
+      "laundry",
+      "air conditioning"
+    ],
+    "images": [
+      "https://photos.zillowstatic.com/fp/eefb4b1f14cc3ea69761cfbd761ad189-cc_ft_384.webp"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 Grand Apartment Rentals - Jersey City, NJ | Zillow",
+      "search_snippet": "See apartments for rent at 235 Grand in Jersey City, NJ on Zillow.com. View rent, amenities, features and contact 235 Grand leasing office for a tour."
+    }
+  },
+  {
+    "id": "123352a11290344a",
+    "source_site": "apartments",
+    "scraped_at": "2026-03-11T21:54:29.306716Z",
+    "listing_url": "https://www.apartments.com/235-grand-jersey-city-nj/kk7xq28/",
+    "title": "Access Denied",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "",
+    "amenities": [],
+    "images": [],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 Grand - 235 Grand St Jersey City, NJ 07302 | Apartments.com",
+      "search_snippet": "2 days ago -See all available apartments for rent at 235 Grand in Jersey City, NJ. 235 Grand has rental units ranging from 425-925 sq ftstarting at $2890."
+    }
+  },
+  {
+    "id": "f100eea3da694f78",
+    "source_site": "apartments",
+    "scraped_at": "2026-03-11T21:54:34.031723Z",
+    "listing_url": "https://www.apartments.com/235-liberty-ave-jersey-city-nj/d80jpxl/",
+    "title": "Access Denied",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "",
+    "amenities": [],
+    "images": [],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 Liberty Ave, Jersey City, NJ 07306 - House Rental in Jersey City, NJ | Apartments.com",
+      "search_snippet": "1 week ago -235 Liberty Ave house in Jersey City,NJ, is available for rent. This house rental unit is available on Apartments.com,starting at $1500 monthly."
+    }
+  },
+  {
+    "id": "4c2a2374e3e9bfd6",
+    "source_site": "apartments",
+    "scraped_at": "2026-03-11T21:54:34.214201Z",
+    "listing_url": "https://www.apartments.com/235-orient-ave-jersey-city-nj/xd2t7np/",
+    "title": "Access Denied",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "",
+    "amenities": [],
+    "images": [],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 Orient Ave, Jersey City, NJ 07305 - 235 Orient Ave Jersey City, NJ 07305 | Apartments.com",
+      "search_snippet": "June 26, 2025 -See all available apartments for rent at 235 Orient Ave in Jersey City, NJ. 235 Orient Ave has rental unitsstarting at $1450."
+    }
+  },
+  {
+    "id": "108df802d8efdf1e",
+    "source_site": "apartments",
+    "scraped_at": "2026-03-11T21:54:38.813319Z",
+    "listing_url": "https://www.apartments.com/235-1st-st-jersey-city-nj/rtwlyc3/",
+    "title": "Access Denied",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "",
+    "amenities": [],
+    "images": [],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 1st St, Jersey City, NJ 07302 - House Rental in Jersey City, NJ | Apartments.com",
+      "search_snippet": "November 20, 2025 -235 1st St house in Jersey City,NJ, is available for rent. This house rental unit is available on Apartments.com,starting at $1850 monthly."
+    }
+  },
+  {
+    "id": "a7bc8d41a1980f00",
+    "source_site": "rent",
+    "scraped_at": "2026-03-11T21:54:35.709673Z",
+    "listing_url": "https://www.rent.com/apartment/235-grand-jersey-city-nj-lc5909127",
+    "title": "235 Grand - 235 Grand St - Jersey City, NJ | Rent.",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "235 Grand St, Jersey City, NJ 07302",
+      "street": "235 Grand St",
+      "city": "Jersey City",
+      "state": "NJ",
+      "zip": "07302"
+    },
+    "details": {
+      "bedrooms": 0,
+      "bathrooms": 1.0,
+      "sqft": 651,
+      "property_type": "studio"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "(551) 393-3823",
+      "agency": ""
+    },
+    "description": "See photos, floor plans and more details about 235 Grand in Jersey City, New Jersey. Visit Rent. now for rental rates and other information about this property.",
+    "amenities": [
+      "parking",
+      "fitness",
+      "pet friendly",
+      "washer",
+      "dryer",
+      "storage"
+    ],
+    "images": [
+      "https://i.rent.com/t_3x2_fixed_webp_md/786a64b35f12dbcf42b957998d9a4004"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 Grand - 235 Grand St - Jersey City, NJ | Rent.",
+      "search_snippet": "January 1, 2023 -See photos, floor plans and more details about 235 Grand in Jersey City, New Jersey. Visit Rent. now for rental rates and other information about this property."
+    }
+  },
+  {
+    "id": "3747dd8e3927b40f",
+    "source_site": "apartments",
+    "scraped_at": "2026-03-11T21:54:43.760835Z",
+    "listing_url": "https://www.apartments.com/hoboken-south-waterfront-hoboken-nj/45fy2sk/",
+    "title": "Access Denied",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "",
+    "amenities": [],
+    "images": [],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "Hoboken South Waterfront - 235 Hudson St Hoboken, NJ 07030 | Apartments.com",
+      "search_snippet": "19 hours ago -See all available apartments for rent at Hoboken South Waterfront in Hoboken, NJ. Hoboken South Waterfront has rental units ranging from 583-1781 sq ftstarting at $3480."
+    }
+  },
+  {
+    "id": "e535ec559a89b338",
+    "source_site": "zillow",
+    "scraped_at": "2026-03-11T21:54:44.358773Z",
+    "listing_url": "https://www.zillow.com/apartments/jersey-city-nj/235-grand/65hTd9/",
+    "title": "235 Grand - 235 Grand St Jersey City NJ (2 units available) | Zillow",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": ",,",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": 0,
+      "bathrooms": 1.0,
+      "sqft": null,
+      "property_type": "studio"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "Positioned in a cozy pocket of Jersey City's Historic Downtown, 235 Grand seamlessly unites contemporary design with this neighborhood's vibrant history. Just blocks from the Hudson River waterfront, 235 Grand provides thoughtfully designed apartments, robust events programming, and elevated amenities to an unparalleled corner of Jersey City.",
+    "amenities": [
+      "parking",
+      "pool",
+      "in-unit laundry",
+      "laundry",
+      "air conditioning"
+    ],
+    "images": [
+      "https://photos.zillowstatic.com/fp/eefb4b1f14cc3ea69761cfbd761ad189-cc_ft_384.webp"
+    ],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 Grand St Jersey City NJ (Updated Daily)",
+      "search_snippet": "See apartments for rent at 235 Grand in Jersey City, NJ on Zillow.com. View rent, amenities, features and contact 235 Grand leasing office for a tour."
+    }
+  },
+  {
+    "id": "4dabb022366d48ee",
+    "source_site": "apartments",
+    "scraped_at": "2026-03-11T21:54:59.619606Z",
+    "listing_url": "https://www.apartments.com/235-new-york-ave-jersey-city-nj/ex5eezm/",
+    "title": "Access Denied",
+    "price": null,
+    "price_raw": "",
+    "address": {
+      "full": "",
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": ""
+    },
+    "details": {
+      "bedrooms": null,
+      "bathrooms": null,
+      "sqft": null,
+      "property_type": "apartment"
+    },
+    "contact": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "agency": ""
+    },
+    "description": "",
+    "amenities": [],
+    "images": [],
+    "listing_age": "",
+    "posted_date": "",
+    "street_view": {
+      "fetched": false,
+      "address": "",
+      "images": [],
+      "coverage": "",
+      "note": ""
+    },
+    "flags": [],
+    "raw_extras": {
+      "search_title": "235 New York Ave, Jersey City, NJ 07307 - 235 New York Ave Jersey City, NJ 07307 | Apartments.com",
+      "search_snippet": "July 30, 2025 -See all available apartments for rent at 235 New York Ave in Jersey City, NJ. 235 New York Ave has rental units ."
+    }
+  }
+]

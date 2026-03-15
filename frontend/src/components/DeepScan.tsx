@@ -98,7 +98,9 @@ export default function DeepScan() {
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
     // Listing details
-    const [listingAddress, setListingAddress] = useState("");
+    const [listingStreet, setListingStreet] = useState("");
+    const [listingUnit, setListingUnit] = useState("");
+    const [listingLocality, setListingLocality] = useState("");
     const [listingDescription, setListingDescription] = useState("");
 
     // Progress tracking
@@ -451,9 +453,16 @@ export default function DeepScan() {
         const progressInterval = simulateProgress();
 
         try {
+            const addressParts = [
+                listingStreet.trim(),
+                listingUnit.trim() ? `Unit ${listingUnit.trim()}` : "",
+                listingLocality.trim()
+            ].filter(Boolean);
+            const combinedAddress = addressParts.join(", ");
+
             const body = new FormData();
             body.append("file", file);
-            body.append("listing_address", listingAddress.trim());
+            body.append("listing_address", combinedAddress);
             body.append("listing_description", listingDescription.trim());
 
             setProgress(10);
@@ -515,24 +524,61 @@ export default function DeepScan() {
             </div>
 
             {/* ── Listing Details ──────────────────────────────────── */}
-            <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+            <div className="space-y-4 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
                     Listing Details
                 </h3>
-                <input
-                    type="text"
-                    placeholder="Listing address (e.g., 123 Main St, Apt 4B, NYC)"
-                    value={listingAddress}
-                    onChange={(e) => setListingAddress(e.target.value)}
-                    className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-                />
-                <textarea
-                    placeholder="Paste the listing description or let TrustKit auto-fetch it from Zillow using the address above."
-                    value={listingDescription}
-                    onChange={(e) => setListingDescription(e.target.value)}
-                    rows={3}
-                    className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none"
-                />
+                
+                {/* Address Fields */}
+                <div className="grid gap-3 md:grid-cols-2">
+                    <div className="md:col-span-2">
+                        <label className="mb-1.5 block text-xs font-medium text-slate-400">Street Address</label>
+                        <input
+                            type="text"
+                            placeholder="e.g., 195 Webster Ave"
+                            value={listingStreet}
+                            onChange={(e) => setListingStreet(e.target.value)}
+                            className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-400">Apt / Unit (Optional)</label>
+                        <input
+                            type="text"
+                            placeholder="e.g., Apt 4B"
+                            value={listingUnit}
+                            onChange={(e) => setListingUnit(e.target.value)}
+                            className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-400">City, State ZIP</label>
+                        <input
+                            type="text"
+                            placeholder="e.g., Jersey City NJ"
+                            value={listingLocality}
+                            onChange={(e) => setListingLocality(e.target.value)}
+                            className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                        />
+                    </div>
+                </div>
+
+                {/* Description Area */}
+                <div>
+                    <label className="mb-1.5 block text-xs font-medium text-slate-400">Description or Claims</label>
+                    <textarea
+                        placeholder="Paste the listing description or let TrustKit auto-fetch it from online using the address above."
+                        value={listingDescription}
+                        onChange={(e) => setListingDescription(e.target.value)}
+                        rows={3}
+                        className="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none"
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                        Enter the address — TrustKit will automatically look up the listing on online platforms to compare claims against the live video.
+                    </p>
+                </div>
             </div>
 
             {/* ── Drop Zone + File Upload ──────────────────────────── */}
@@ -718,6 +764,49 @@ export default function DeepScan() {
                             ))}
                         </div>
                     </div>
+                    {/* Listing Comparison (if available) */}
+                    {report.listing_comparison && (
+                        <div>
+                            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                                Verify Against Listing
+                            </h4>
+                            <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-5 space-y-4">
+                                {report.listing_comparison.error ? (
+                                    <p className="text-sm text-red-400">{report.listing_comparison.error}</p>
+                                ) : (
+                                    <>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                            <div>
+                                                <p className="text-slate-500 mb-1 leading-none">Price</p>
+                                                <p className="text-slate-200 font-medium">{report.listing_comparison.price}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-500 mb-1 leading-none">Beds</p>
+                                                <p className="text-slate-200 font-medium">{report.listing_comparison.beds}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-500 mb-1 leading-none">Baths</p>
+                                                <p className="text-slate-200 font-medium">{report.listing_comparison.baths}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-slate-500 mb-1 leading-none">Sqft</p>
+                                                <p className="text-slate-200 font-medium">{report.listing_comparison.sqft}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="pt-3 border-t border-slate-700 mt-4">
+                                            <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">
+                                                AI Comparison Summary
+                                            </p>
+                                            <div className="text-sm text-slate-300 space-y-2 whitespace-pre-wrap">
+                                                {report.listing_comparison.comparison_summary}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -818,41 +907,6 @@ export default function DeepScan() {
                                 </span>
                             </div>
                         </div>
-                    )}
-                </div>
-            )}
-
-            {/* ── Zillow Comparison Summary ───────────────────── */}
-            {report && report.listing_comparison && (
-                <div className="lg:col-span-2 rounded-xl border border-slate-700 bg-slate-800/50 p-6 space-y-4">
-                    <h3 className="text-lg font-semibold text-white">📊 Zillow Listing Comparison</h3>
-
-                    {report.listing_comparison.error ? (
-                        <p className="text-sm text-amber-400">{report.listing_comparison.error}</p>
-                    ) : (
-                        <>
-                            <div className="grid gap-4 sm:grid-cols-4">
-                                <InfoCard label="Address" value={report.listing_comparison.address} />
-                                <InfoCard label="Price" value={report.listing_comparison.price} />
-                                <InfoCard label="Beds / Baths" value={`${report.listing_comparison.beds} / ${report.listing_comparison.baths}`} />
-                                <InfoCard label="Sqft" value={report.listing_comparison.sqft} />
-                            </div>
-
-                            <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-5">
-                                <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
-                                    Forensic Comparison Summary
-                                </h4>
-                                <div className="space-y-1">
-                                    {report.listing_comparison.comparison_summary.split('\n').map((line, i) => (
-                                        <p key={i} className="text-sm text-slate-300 leading-relaxed">{line}</p>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <p className="text-xs text-slate-500">
-                                Source: {report.listing_comparison.source} · {report.listing_comparison.photo_count} listing photos analyzed
-                            </p>
-                        </>
                     )}
                 </div>
             )}

@@ -10,16 +10,16 @@ import asyncio
 import json
 import traceback
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect  # type: ignore[import]
+from fastapi.middleware.cors import CORSMiddleware  # type: ignore[import]
 
-from routes.deep_scan import router as deep_scan_router
-from modules.vision_analyzer import analyze_frame
-from modules.metadata_analyzer import analyze_live_frame
-from modules.agent_reasoner import evaluate_trust
-from modules.listing_scraper import scrape_zillow_listing
+from routes.deep_scan import router as deep_scan_router  # type: ignore[import]
+from modules.vision_analyzer import analyze_frame  # type: ignore[import]
+from modules.metadata_analyzer import analyze_live_frame  # type: ignore[import]
+from modules.agent_reasoner import evaluate_trust  # type: ignore[import]
+from modules.scraper import scrape  # type: ignore[import]
 
-from modules.tts_engine import generate_warning_audio, generate_chat_response
+from modules.tts_engine import generate_warning_audio, generate_chat_response  # type: ignore[import]
 
 # ---------------------------------------------------------------------------
 # App initialisation
@@ -68,7 +68,7 @@ _FALLBACK_ALERT = {
 # ---------------------------------------------------------------------------
 
 
-from starlette.websockets import WebSocketState
+from starlette.websockets import WebSocketState  # type: ignore[import]
 import json
 
 @app.websocket("/ws/live")
@@ -108,31 +108,51 @@ async def live_copilot(websocket: WebSocket):
 
             # Auto-scrape Zillow if address is provided
             if address:
-                print(f"[ws/live] 🔍 Auto-scraping Zillow for: {address}")
-                scraped = await asyncio.to_thread(scrape_zillow_listing, address)
-                if scraped.get("found") and scraped.get("description"):
-                    scraped_parts = []
-                    if scraped.get("price", "N/A") != "N/A":
-                        scraped_parts.append(f"Price: {scraped['price']}")
-                    if scraped.get("bedrooms", "N/A") != "N/A":
-                        scraped_parts.append(f"{scraped['bedrooms']} bed")
-                    if scraped.get("bathrooms", "N/A") != "N/A":
-                        scraped_parts.append(f"{scraped['bathrooms']} bath")
-                    if scraped.get("sqft", "N/A") != "N/A":
-                        scraped_parts.append(f"{scraped['sqft']} sqft")
+                print(f"[ws/live] 🔍 Auto-scraping for: {address}")
+                # Use the new Universal Scraper
+                # Setting max_results to 1 since we just want the best match for this address
+                scrape_results = await asyncio.to_thread(scrape, address, max_results=1, headless=True)
+                
+                if scrape_results:
+                    scraped = scrape_results[0]
+                    scraped_parts: list[str] = []
+                    
+                    price = scraped.get("price")
+                    if price:
+                        scraped_parts.append(f"Price: ${price}/mo")
+                        
+                    details = scraped.get("details", {})
+                    beds = details.get("bedrooms")
+                    if beds is not None:
+                        scraped_parts.append(f"{beds} bed" + ("s" if beds != 1 else ""))
+                        
+                    baths = details.get("bathrooms")
+                    if baths is not None:
+                        scraped_parts.append(f"{baths} bath" + ("s" if baths != 1 else ""))
+                        
+                    sqft = details.get("sqft")
+                    if sqft is not None:
+                        scraped_parts.append(f"{sqft} sqft")
+                        
                     scraped_header = " · ".join(scraped_parts) + ". " if scraped_parts else ""
-                    scraped_desc = scraped_header + scraped["description"]
+                    
+                    scraped_description = scraped.get("description", "")
+                    scraped_desc_full = scraped_header + scraped_description
+                    
+                    if scraped_desc_full.strip():
                     # Append scraped data to user-provided description
-                    description = (description + " " + scraped_desc).strip() if description else scraped_desc
-                    print(f"[ws/live] ✓ Zillow data found, enriched listing claims")
+                        description = (description + " " + scraped_desc_full).strip() if description else scraped_desc_full
+                        print(f"[ws/live] ✓ Listing data found on {scraped.get('source_site', 'web')}, enriched listing claims")
+                    else:
+                        print(f"[ws/live] ⚠️  Listing found but no description/details extracted")
                 else:
-                    print(f"[ws/live] ⚠️  Zillow scrape failed: {scraped.get('error', 'unknown')}")
+                    print(f"[ws/live] ⚠️  Auto-scrape found no results for this address")
 
-            parts = []
+            parts: list[str] = []
             if address:
-                parts.append(f"Address: {address}")
+                parts.append(f"Address: {address}")  # type: ignore[arg-type]
             if description:
-                parts.append(description)
+                parts.append(description)  # type: ignore[arg-type]
 
             listing_claims = ". ".join(parts) if parts else ""
             print(f"[ws/live] 📋 Listing claims: {listing_claims or '(none provided)'}")
@@ -205,12 +225,12 @@ async def live_copilot(websocket: WebSocket):
                 raise WebSocketDisconnect(message.get("code", 1000))
             
             if "bytes" in message:
-                if processing_task and not processing_task.done():
+                if processing_task and not processing_task.done():  # type: ignore[union-attr]
                     # Drop frame to prevent queue buildup and keep latency strictly real-time
                     continue
                     
                 frame_bytes = message["bytes"]
-                frame_count += 1
+                frame_count: int = frame_count + 1  # type: ignore[operator]
                 print(f"\n[ws/live] ── Frame #{frame_count} ({len(frame_bytes)} bytes) ──")
                 
                 processing_task = asyncio.create_task(process_frame(frame_bytes, frame_count, listing_claims))
@@ -224,7 +244,7 @@ async def live_copilot(websocket: WebSocket):
 
 
 
-from modules.voice_agent import stream_voice_chat
+from modules.voice_agent import stream_voice_chat  # type: ignore[import]
 
 @app.websocket("/ws/voice")
 async def deepscan_voice(websocket: WebSocket):
@@ -287,7 +307,7 @@ async def deepscan_voice(websocket: WebSocket):
                             # Send chunk back to frontend (text or audio)
                             await websocket.send_json(response_chunk)
                             if response_chunk.get("message"):
-                                full_agent_response += response_chunk["message"]
+                                full_agent_response = full_agent_response + response_chunk["message"]  # type: ignore[operator]
                         
                         if full_agent_response:
                             chat_history.append({"role": "agent", "content": full_agent_response})
@@ -305,7 +325,7 @@ async def deepscan_voice(websocket: WebSocket):
 # Health check & REST Routes
 # ---------------------------------------------------------------------------
 
-from routes.deep_scan import router as deep_scan_router
+from routes.deep_scan import router as deep_scan_router  # type: ignore[import]  # noqa: F811
 app.include_router(deep_scan_router)
 
 @app.get("/health")
@@ -319,5 +339,5 @@ async def health_check():
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    import uvicorn
+    import uvicorn  # type: ignore[import]
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

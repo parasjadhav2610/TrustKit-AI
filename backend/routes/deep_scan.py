@@ -52,31 +52,52 @@ async def deep_scan(
     address = listing_address.strip()
     description = listing_description.strip()
 
-    # Auto-scrape Zillow if address is provided
+    # Auto-scrape listing if address is provided
+    scraped_listing_data = {}
     if address:
-        print(f"[deep-scan] 🔍 Auto-scraping Zillow for: {address}")
-        from modules.listing_scraper import scrape_zillow_listing
-        scraped = await asyncio.to_thread(scrape_zillow_listing, address)
-        if scraped.get("found") and scraped.get("description"):
+        print(f"[deep-scan] 🔍 Auto-scraping listing for: {address}")
+        from modules.scraper import SearchAgent, UniversalParser
+        
+        # Run search and parse in a thread because Playwright/HTTP requests are blocking
+        def _scrape():
+            agent = SearchAgent(max_results=10)
+            urls = agent.find(query=address)
+            if not urls:
+                return {"found": False, "error": "No listings found online."}
+                
+            parser = UniversalParser(headless=True)
+            for result in urls:
+                parsed = parser.parse(result["url"])
+                if parsed:
+                    return {"found": True, "listing": parsed.to_dict()}
+            return {"found": False, "error": "Failed to parse listing pages."}
+
+        scraped = await asyncio.to_thread(_scrape)
+        
+        if scraped.get("found") and scraped.get("listing"):
+            scraped_listing_data = scraped["listing"]
+            listing_details = scraped_listing_data.get("details", {})
+            scraped_desc = scraped_listing_data.get("description", "")
+            
             scraped_parts = []
-            if scraped.get("price", "N/A") != "N/A":
-                scraped_parts.append(f"Price: {scraped['price']}")
-            if scraped.get("bedrooms", "N/A") != "N/A":
-                scraped_parts.append(f"{scraped['bedrooms']} bed")
-            if scraped.get("bathrooms", "N/A") != "N/A":
-                scraped_parts.append(f"{scraped['bathrooms']} bath")
-            if scraped.get("sqft", "N/A") != "N/A":
-                scraped_parts.append(f"{scraped['sqft']} sqft")
+            if scraped_listing_data.get("price") is not None:
+                scraped_parts.append(f"Price: {scraped_listing_data['price_raw']}")
+            if listing_details.get("bedrooms") is not None:
+                scraped_parts.append(f"{listing_details['bedrooms']} bed")
+            if listing_details.get("bathrooms") is not None:
+                scraped_parts.append(f"{listing_details['bathrooms']} bath")
+            if listing_details.get("sqft") is not None:
+                scraped_parts.append(f"{listing_details['sqft']} sqft")
+                
             scraped_header = " · ".join(scraped_parts) + ". " if scraped_parts else ""
-            scraped_desc = scraped_header + scraped["description"]
-            description = (description + " " + scraped_desc).strip() if description else scraped_desc
-            print(f"[deep-scan] ✓ Zillow data found, enriched listing claims")
+            full_desc = scraped_header + scraped_desc
+            description = (description + " " + full_desc).strip() if description else full_desc
+            print(f"[deep-scan] ✓ Listing data found from {scraped_listing_data.get('source_site')}, enriched listing claims")
         else:
-            print(f"[deep-scan] ⚠️  Zillow scrape failed: {scraped.get('error', 'unknown')}")
+            print(f"[deep-scan] ⚠️  Listing scrape failed: {scraped.get('error', 'unknown')}")
 
     parts = []
-    if address:
-        parts.append(f"Address: {address}")
+    # Drop the repetitive Address prefix from the generic claims string
     if description:
         parts.append(description)
     listing_claims = ". ".join(parts) if parts else ""
@@ -126,59 +147,77 @@ async def deep_scan(
                     "brightness": forensics_results[0].get("brightness", 0),
                 }
 
-        # --- Agent Reasoner ---
+        # --- Agent Reasoner (Baseline fallback, overwritten by comparator if there is address data) ---
         assessment = await asyncio.to_thread(
             evaluate_trust,
             combined_payload,
             listing_claims,
         )
 
+        # --- Listing Comparison & Final Assessment ---
+        listing_comparison = None
         
+        if address and scraped_listing_data:
+            from modules.comparator import compare_scraped_and_vision
+            
+            # --- Write to fallback cache file as requested by the user ---
+            import re
+            
+            # Create a safe filename from the address
+            safe_address = re.sub(r'[^a-zA-Z0-9_\-]', '_', address).strip('_')
+            cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "output", "scraper_cache")
+            os.makedirs(cache_dir, exist_ok=True)
+            cache_filepath = os.path.join(cache_dir, f"{safe_address}.json")
+            
+            with open(cache_filepath, "w", encoding="utf-8") as f:
+                json.dump(scraped_listing_data, f, indent=4)
+                
+            print(f"[deep-scan] Saved scraper output to failsafe cache: {cache_filepath}")
+            
+            print("[deep-scan] Running detailed comparison from JSON file exclusively...")
+            comp_result = await asyncio.to_thread(
+                compare_scraped_and_vision,
+                {},  # INTENTIONALLY PASS EMPTY DICT TO FORCE FILE LOAD
+                vision_results,
+                listing_claims,
+                cache_filepath  # Pass the path to the comparator
+            )
+            
+            # Use the more comprehensive comparator output instead!
+            assessment = {
+                "alert": comp_result["alert"],
+                "message": comp_result["message"],
+                "trust_score": comp_result["trust_score"],
+            }
+            
+            listing_details = scraped_listing_data.get("details", {})
+            addr_obj = scraped_listing_data.get("address", {})
+            addr_str = addr_obj.get("full", address) if isinstance(addr_obj, dict) else str(addr_obj)
+            
+            # Format comparison for frontend
+            listing_comparison = {
+                "address": addr_str,
+                "price": scraped_listing_data.get("price_raw", "N/A"),
+                "beds": str(listing_details.get("bedrooms", "N/A")),
+                "baths": str(listing_details.get("bathrooms", "N/A")),
+                "sqft": str(listing_details.get("sqft", "N/A")),
+                "description": scraped_listing_data.get("description", ""),
+                "photo_count": len(scraped_listing_data.get("images", [])),
+                "source": scraped_listing_data.get("source_site", "unknown"),
+                "comparison_summary": comp_result["comparison_summary"],
+            }
+        elif address:
+            listing_comparison = {
+                "error": "Listing data was unavailable.",
+                "comparison_summary": "Scraper was unable to find this listing online to perform a comparison.",
+            }
         
         # --- Audio Pipeline ---
         audio_data = None
         if assessment.get("alert"):
             audio_data = await asyncio.to_thread(generate_warning_audio, assessment)
 
-        # --- Zillow Comparison Pipeline (if address provided) ---
-        listing_comparison = None
-        listing_data = None
-        
-        if address and address.strip():
-            try:
-                from modules.zillow_scraper import search_by_address
-                from modules.listing_comparator import compare_video_vs_listing
-                
-                # Scrape Zillow listing
-                listing_data = await asyncio.to_thread(search_by_address, address.strip())
-                
-                # Compare if we have photos from both sources
-                listing_photos = listing_data.get("photos_bytes", [])
-                
-                comparison_summary = await asyncio.to_thread(
-                    compare_video_vs_listing,
-                    frames[:3],  # first 3 video frames
-                    listing_photos,  # listing photos
-                    listing_data,  # listing details
-                )
-                
-                listing_comparison = {
-                    "address": listing_data.get("address", address),
-                    "price": listing_data.get("price", "N/A"),
-                    "beds": listing_data.get("beds", "N/A"),
-                    "baths": listing_data.get("baths", "N/A"),
-                    "sqft": listing_data.get("sqft", "N/A"),
-                    "description": listing_data.get("description", ""),
-                    "photo_count": len(listing_data.get("photo_urls", [])),
-                    "source": listing_data.get("source", "unknown"),
-                    "comparison_summary": comparison_summary,
-                }
-            except Exception as e:
-                print(f"[deep_scan] Zillow comparison failed: {e}")
-                listing_comparison = {
-                    "error": str(e),
-                    "comparison_summary": "Zillow comparison was unavailable. Please try again.",
-                }
+
 
         print(f"[deep-scan] Assessment: score={assessment.get('trust_score')}, "
               f"alert={assessment.get('alert')}")

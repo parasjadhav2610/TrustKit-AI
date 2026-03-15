@@ -1,0 +1,1107 @@
+diff --git a/backend/modules/agent_reasoner.py b/backend/modules/agent_reasoner.py
+index 2632a1a..e7caa54 100644
+--- a/backend/modules/agent_reasoner.py
++++ b/backend/modules/agent_reasoner.py
+@@ -64,7 +64,7 @@ def _get_model():
+     except Exception as exc:
+         print(f"[agent_reasoner] Vertex AI init failed: {exc}. Attempting google.generativeai fallback...")
+         try:
+-            import google.generativeai as genai
++            import google.generativeai as genai  # type: ignore[import]
+             api_key = os.getenv("GEMINI_API_KEY")
+             if api_key:
+                 genai.configure(api_key=api_key)
+diff --git a/backend/modules/frame_extractor.py b/backend/modules/frame_extractor.py
+index 4e2ef55..6dc9622 100644
+--- a/backend/modules/frame_extractor.py
++++ b/backend/modules/frame_extractor.py
+@@ -323,7 +323,7 @@ def extract_from_file(video_path: str, num_frames: int = 7) -> list[bytes]:
+         if total_frames <= num_frames:
+             target_indices = list(range(total_frames))
+         else:
+-            step = max(1, total_frames / num_frames)
++            step = max(1.0, total_frames / num_frames)
+             target_indices = [int(i * step) for i in range(num_frames)]
+             # ensure last index does not exceed bounds
+             if target_indices[-1] >= total_frames:
+diff --git a/backend/modules/listing_comparator.py b/backend/modules/listing_comparator.py
+deleted file mode 100644
+index ec785b8..0000000
+--- a/backend/modules/listing_comparator.py
++++ /dev/null
+@@ -1,186 +0,0 @@
+-"""TrustKit AI — Listing Comparator Module.
+-
+-Compares uploaded video frames against scraped Zillow listing photos
+-using Gemini Vision to produce a 20-line forensic comparison summary.
+-"""
+-
+-import base64
+-import json
+-import os
+-from typing import List, Optional
+-
+-from dotenv import load_dotenv
+-
+-load_dotenv()
+-
+-
+-def _get_model():
+-    """Get the Gemini generative model (with Vertex AI -> API Key fallback)."""
+-    try:
+-        from modules.agent_reasoner import _get_model as get_reasoner_model
+-        return get_reasoner_model()
+-    except Exception:
+-        return None
+-
+-
+-def compare_video_vs_listing(
+-    video_frames: List[bytes],
+-    listing_photos: List[bytes],
+-    listing_details: dict,
+-) -> str:
+-    """Compare video frames against Zillow listing photos using Gemini Vision.
+-    
+-    Args:
+-        video_frames: List of JPEG-encoded bytes from the uploaded video.
+-        listing_photos: List of JPEG-encoded bytes from the Zillow listing.
+-        listing_details: Dict with keys: address, price, beds, baths, sqft, description.
+-    
+-    Returns:
+-        A 20-line forensic comparison summary string.
+-    """
+-    model = _get_model()
+-    
+-    if model is None:
+-        return _fallback_comparison(listing_details)
+-    
+-    # Build multi-modal prompt with images
+-    try:
+-        parts = _build_prompt_parts(video_frames, listing_photos, listing_details)
+-        response = model.generate_content(parts)
+-        return response.text.strip()
+-    except Exception as e:
+-        print(f"[listing_comparator] Gemini comparison failed: {e}")
+-        # Try with the google.generativeai format
+-        try:
+-            return _compare_with_genai(video_frames, listing_photos, listing_details)
+-        except Exception as e2:
+-            print(f"[listing_comparator] genai comparison also failed: {e2}")
+-            return _fallback_comparison(listing_details)
+-
+-
+-def _build_prompt_parts(
+-    video_frames: List[bytes],
+-    listing_photos: List[bytes],
+-    listing_details: dict,
+-) -> list:
+-    """Build the multi-modal prompt parts for Gemini."""
+-    
+-    prompt_text = f"""You are TrustKit AI, a forensic real estate fraud investigator. You have been given:
+-
+-1. FRAMES FROM A VIDEO TOUR of a property (labeled "Video Frame 1", "Video Frame 2", etc.)
+-2. PHOTOS FROM THE ZILLOW LISTING for the same address (labeled "Listing Photo 1", "Listing Photo 2", etc.)
+-3. The LISTING DETAILS from Zillow.
+-
+-LISTING DETAILS:
+-- Address: {listing_details.get('address', 'Unknown')}
+-- Price: {listing_details.get('price', 'N/A')}
+-- Beds: {listing_details.get('beds', 'N/A')}
+-- Baths: {listing_details.get('baths', 'N/A')}  
+-- Sqft: {listing_details.get('sqft', 'N/A')}
+-- Description: {listing_details.get('description', 'No description')}
+-
+-YOUR TASK:
+-Compare the video tour frames with the Zillow listing photos and generate a DETAILED 20-LINE FORENSIC COMPARISON REPORT. Each line should be a complete sentence covering one specific observation.
+-
+-Cover these areas:
+-- Do the rooms in the video match the rooms in the listing photos?
+-- Are the walls, floors, and fixtures consistent between the video and photos?
+-- Does the view from windows match between video and listing?
+-- Are there signs of photo editing or staging in the listing photos?
+-- Does the property condition in the video match what the listing claims?
+-- Are the number of rooms consistent with the bed/bath count listed?
+-- Are there any objects, furniture, or features present in one but missing in the other?
+-- Overall trust assessment: Is the listing honest or potentially deceptive?
+-
+-FORMAT: Write exactly 20 lines. Each line should be a numbered observation (1-20).
+-Do NOT use markdown formatting, bullet points, or headers. Just numbered lines.
+-Return ONLY the 20 numbered lines, nothing else."""
+-
+-    parts = [prompt_text]
+-    
+-    # Try to use google.generativeai Image format
+-    try:
+-        import google.generativeai as genai
+-        from PIL import Image
+-        import io
+-        
+-        # Add video frames
+-        for i, frame_bytes in enumerate(video_frames[:3]):
+-            parts.append(f"\n--- Video Frame {i+1} ---\n")
+-            img = Image.open(io.BytesIO(frame_bytes))
+-            parts.append(img)
+-        
+-        # Add listing photos
+-        for i, photo_bytes in enumerate(listing_photos[:3]):
+-            parts.append(f"\n--- Listing Photo {i+1} ---\n")
+-            img = Image.open(io.BytesIO(photo_bytes))
+-            parts.append(img)
+-            
+-        return parts
+-        
+-    except ImportError:
+-        # Fall back to Vertex AI Part format
+-        try:
+-            from vertexai.generative_models import Part
+-            
+-            for i, frame_bytes in enumerate(video_frames[:3]):
+-                parts.append(f"\n--- Video Frame {i+1} ---\n")
+-                parts.append(Part.from_data(data=frame_bytes, mime_type="image/jpeg"))
+-
+-            for i, photo_bytes in enumerate(listing_photos[:3]):
+-                parts.append(f"\n--- Listing Photo {i+1} ---\n")
+-                parts.append(Part.from_data(data=photo_bytes, mime_type="image/jpeg"))
+-                
+-            return parts
+-        except ImportError:
+-            return [prompt_text]
+-
+-
+-def _compare_with_genai(
+-    video_frames: List[bytes],
+-    listing_photos: List[bytes],
+-    listing_details: dict,
+-) -> str:
+-    """Fallback comparison using google.generativeai SDK directly."""
+-    import google.generativeai as genai
+-    from PIL import Image
+-    import io
+-    
+-    api_key = os.getenv("GEMINI_API_KEY")
+-    if not api_key:
+-        raise ValueError("GEMINI_API_KEY not set")
+-    
+-    genai.configure(api_key=api_key)
+-    model = genai.GenerativeModel("gemini-2.5-flash")
+-    
+-    parts = _build_prompt_parts(video_frames, listing_photos, listing_details)
+-    response = model.generate_content(parts)
+-    return response.text.strip()
+-
+-
+-def _fallback_comparison(listing_details: dict) -> str:
+-    """Generate a basic comparison when Gemini is unavailable."""
+-    address = listing_details.get("address", "the property")
+-    lines = [
+-        f"1. Forensic comparison report for: {address}",
+-        f"2. Listed price: {listing_details.get('price', 'N/A')}, {listing_details.get('beds', 'N/A')} beds, {listing_details.get('baths', 'N/A')} baths.",
+-        "3. AI Vision comparison engine was unavailable for this analysis.",
+-        "4. Video frames were extracted but could not be compared against listing photos.",
+-        "5. Manual visual inspection of the video tour is recommended.",
+-        "6. Check that room layouts in the video match the floor plan described in the listing.",
+-        "7. Verify window views shown in the video against listing photo backgrounds.",
+-        "8. Look for signs of photo editing like warped edges or inconsistent lighting in listing photos.",
+-        "9. Compare furniture and fixture placement between video and listing photos.",
+-        "10. Check if wall colors and flooring materials are consistent across both sources.",
+-        "11. Verify that the number of rooms in the tour matches the bed/bath count.",
+-        "12. Look for staging indicators like price tags or showroom-like setups.",
+-        "13. Check if the listing photos appear to be from a different season than the video tour.",
+-        "14. Compare the overall property condition between the video and the listing claims.",
+-        "15. Inspect whether appliances shown in listing photos are present in the video.",
+-        "16. Check for any watermarks or stock photo indicators in the listing images.",
+-        "17. Verify that exterior views and building entrances match across both sources.",
+-        "18. Look for inconsistencies in natural lighting between the listing photos and video frames.",
+-        "19. A full AI-powered analysis requires API access to generate a complete trust assessment.",
+-        "20. RECOMMENDATION: Exercise caution and consider an in-person visit before making any decisions.",
+-    ]
+-    return "\n".join(lines)
+diff --git a/backend/modules/listing_scraper.py b/backend/modules/listing_scraper.py
+deleted file mode 100644
+index 01d0403..0000000
+--- a/backend/modules/listing_scraper.py
++++ /dev/null
+@@ -1,488 +0,0 @@
+-"""TrustKit AI — Listing Scraper.
+-
+-Scrapes property listing details using multiple strategies:
+-1. Zillow autocomplete API → get zpid → Zillow internal property API
+-2. Redfin search + stingray API (lighter bot protection)
+-3. Google search snippet parsing as last resort
+-
+-Falls back gracefully if all methods fail — the pipeline
+-continues with whatever the user typed manually.
+-"""
+-
+-from __future__ import annotations
+-
+-import json
+-import re
+-from typing import Any, Dict, Optional
+-from urllib.parse import quote_plus, quote
+-
+-import requests
+-from bs4 import BeautifulSoup
+-
+-
+-# ---------------------------------------------------------------------------
+-# Constants
+-# ---------------------------------------------------------------------------
+-
+-_TIMEOUT = 15  # seconds
+-
+-_BROWSER_UA = (
+-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+-    "AppleWebKit/537.36 (KHTML, like Gecko) "
+-    "Chrome/122.0.0.0 Safari/537.36"
+-)
+-
+-
+-# ---------------------------------------------------------------------------
+-# Core scraper — tries strategies in order
+-# ---------------------------------------------------------------------------
+-
+-
+-def scrape_zillow_listing(address: str) -> Dict[str, Any]:
+-    """Scrape listing details for the given address.
+-
+-    Strategies:
+-    1. Zillow autocomplete → zpid → internal property API
+-    2. Redfin search + stingray detail API
+-    3. Google search snippet extraction
+-
+-    Returns a dict with listing details or error.
+-    """
+-    if not address or not address.strip():
+-        return _empty_result(address, error="No address provided")
+-
+-    # Strategy 1: Zillow autocomplete → property detail API
+-    print(f"[listing_scraper] Strategy 1: Zillow autocomplete + property API")
+-    result = _try_zillow_autocomplete_pipeline(address)
+-    if result and result.get("found") and result.get("description", "").startswith("Property at") is False:
+-        return result
+-
+-    # Strategy 2: Redfin (lighter bot protection)
+-    print(f"[listing_scraper] Strategy 2: Redfin search")
+-    result = _try_redfin(address)
+-    if result and result.get("found"):
+-        return result
+-
+-    # Strategy 3: Google search snippet
+-    print(f"[listing_scraper] Strategy 3: Google search")
+-    result = _try_google_search(address)
+-    if result and result.get("found"):
+-        return result
+-
+-    # If we at least got the Zillow autocomplete data, return that
+-    print(f"[listing_scraper] Strategy 4: Zillow autocomplete (basic)")
+-    result = _try_zillow_autocomplete_basic(address)
+-    if result and result.get("found"):
+-        return result
+-
+-    return _empty_result(address, error="Could not find listing data (all strategies failed)")
+-
+-
+-# ---------------------------------------------------------------------------
+-# Strategy 1: Zillow autocomplete → property detail API
+-# ---------------------------------------------------------------------------
+-
+-
+-def _try_zillow_autocomplete_pipeline(address: str) -> Optional[Dict]:
+-    """Get zpid from autocomplete, then try internal APIs for details."""
+-    try:
+-        # Step 1: Get zpid from autocomplete
+-        api_url = "https://www.zillowstatic.com/autocomplete/v3/suggestions"
+-        params = {"q": address, "resultTypes": "allAddress", "resultCount": 1}
+-        headers = {
+-            "User-Agent": _BROWSER_UA,
+-            "Referer": "https://www.zillow.com/",
+-            "Origin": "https://www.zillow.com",
+-        }
+-
+-        resp = requests.get(api_url, params=params, headers=headers, timeout=_TIMEOUT)
+-        if resp.status_code != 200:
+-            return None
+-
+-        data = resp.json()
+-        results = data.get("results", [])
+-        if not results:
+-            return None
+-
+-        first = results[0]
+-        display = first.get("display", "")
+-        meta = first.get("metaData", {})
+-        zpid = meta.get("zpid", "")
+-
+-        if not zpid:
+-            return None
+-
+-        print(f"[listing_scraper] Found zpid={zpid} for '{display}'")
+-
+-        # Step 2: Try Zillow's internal property details API
+-        # This endpoint is used by Zillow's frontend and may not be behind PerimeterX
+-        detail_apis = [
+-            f"https://www.zillow.com/graphql/?zpid={zpid}",
+-            f"https://zm.zillow.com/api/public/v2/mobile-search/homes/lookup?zpid={zpid}",
+-        ]
+-
+-        for api in detail_apis:
+-            try:
+-                detail_headers = {
+-                    "User-Agent": _BROWSER_UA,
+-                    "Referer": "https://www.zillow.com/",
+-                    "Origin": "https://www.zillow.com",
+-                    "Accept": "application/json",
+-                }
+-                dr = requests.get(api, headers=detail_headers, timeout=_TIMEOUT)
+-                if dr.status_code == 200:
+-                    try:
+-                        detail_data = dr.json()
+-                        parsed = _parse_zillow_api_response(detail_data, display)
+-                        if parsed:
+-                            parsed["listing_url"] = f"https://www.zillow.com/homedetails/{zpid}_zpid/"
+-                            return parsed
+-                    except (json.JSONDecodeError, ValueError):
+-                        pass
+-            except Exception:
+-                continue
+-
+-        return None
+-
+-    except Exception as exc:
+-        print(f"[listing_scraper] Zillow autocomplete pipeline failed: {exc}")
+-        return None
+-
+-
+-def _parse_zillow_api_response(data: dict, address: str) -> Optional[Dict]:
+-    """Parse a Zillow API JSON response for property details."""
+-    # Try various known response structures
+-    prop = data
+-    for path in [["data", "property"], ["property"], ["results", 0]]:
+-        temp = data
+-        for key in path:
+-            if isinstance(temp, dict):
+-                temp = temp.get(key, {})
+-            elif isinstance(temp, list) and isinstance(key, int) and len(temp) > key:
+-                temp = temp[key]
+-            else:
+-                temp = {}
+-                break
+-        if temp and isinstance(temp, dict) and any(k in temp for k in ["bedrooms", "price", "description"]):
+-            prop = temp
+-            break
+-
+-    if not prop or not isinstance(prop, dict):
+-        return None
+-
+-    desc = prop.get("description", "")
+-    if not desc:
+-        return None
+-
+-    return {
+-        "found": True,
+-        "address": prop.get("streetAddress", address),
+-        "price": str(prop.get("price", "N/A")),
+-        "bedrooms": str(prop.get("bedrooms", "N/A")),
+-        "bathrooms": str(prop.get("bathrooms", "N/A")),
+-        "sqft": str(prop.get("livingArea", "N/A")),
+-        "description": desc,
+-        "listing_type": prop.get("homeStatus", "Unknown"),
+-        "year_built": str(prop.get("yearBuilt", "N/A")),
+-        "listing_url": "",
+-        "error": None,
+-    }
+-
+-
+-# ---------------------------------------------------------------------------
+-# Strategy 2: Redfin
+-# ---------------------------------------------------------------------------
+-
+-
+-def _try_redfin(address: str) -> Optional[Dict]:
+-    """Search Redfin for the listing — lighter bot protection than Zillow."""
+-    try:
+-        # Step 1: Redfin autocomplete to find the property URL
+-        search_url = "https://www.redfin.com/stingray/do/location-autocomplete"
+-        params = {"location": address, "v": 2}
+-        headers = {
+-            "User-Agent": _BROWSER_UA,
+-            "Referer": "https://www.redfin.com/",
+-        }
+-
+-        resp = requests.get(search_url, params=params, headers=headers, timeout=_TIMEOUT)
+-        print(f"[listing_scraper] Redfin autocomplete: {resp.status_code}")
+-
+-        if resp.status_code != 200:
+-            return None
+-
+-        # Redfin wraps JSON in {}&&{...}
+-        text = resp.text
+-        if text.startswith("{}&&"):
+-            text = text[4:]
+-
+-        data = json.loads(text)
+-        payload = data.get("payload", {})
+-        sections = payload.get("sections", [])
+-
+-        property_url = None
+-        display_name = address
+-
+-        for section in sections:
+-            rows = section.get("rows", [])
+-            for row in rows:
+-                if row.get("type") == "1":  # Address type
+-                    property_url = row.get("url", "")
+-                    display_name = row.get("name", address)
+-                    break
+-            if property_url:
+-                break
+-
+-        if not property_url:
+-            # Try exactMatch
+-            exact = payload.get("exactMatch", {})
+-            if exact:
+-                property_url = exact.get("url", "")
+-                display_name = exact.get("name", address)
+-
+-        if not property_url:
+-            print("[listing_scraper] Redfin: no property URL found")
+-            return None
+-
+-        # Step 2: Fetch the property page
+-        full_url = f"https://www.redfin.com{property_url}"
+-        print(f"[listing_scraper] Redfin property page: {full_url}")
+-
+-        page_resp = requests.get(full_url, headers=headers, timeout=_TIMEOUT)
+-        print(f"[listing_scraper] Redfin page: {page_resp.status_code}")
+-
+-        if page_resp.status_code != 200:
+-            return None
+-
+-        soup = BeautifulSoup(page_resp.text, "html.parser")
+-
+-        # Extract data from meta tags
+-        description = ""
+-        price = "N/A"
+-
+-        og_desc = soup.find("meta", {"property": "og:description"})
+-        if og_desc:
+-            description = og_desc.get("content", "")
+-
+-        meta_desc = soup.find("meta", {"name": "description"})
+-        if meta_desc and not description:
+-            description = meta_desc.get("content", "")
+-
+-        title = soup.find("title")
+-        if title and title.string:
+-            price_match = re.search(r"\$[\d,]+", title.string)
+-            if price_match:
+-                price = price_match.group(0)
+-
+-        if not description:
+-            return None
+-
+-        # Parse bed/bath/sqft from description
+-        beds = "N/A"
+-        baths = "N/A"
+-        sqft = "N/A"
+-
+-        bed_match = re.search(r"(\d+)\s*(?:bed|bd|bedroom|br)", description, re.IGNORECASE)
+-        bath_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:bath|ba|bathroom)", description, re.IGNORECASE)
+-        sqft_match = re.search(r"([\d,]+)\s*(?:sq\s*ft|sqft|square\s*feet|sf)", description, re.IGNORECASE)
+-
+-        if bed_match:
+-            beds = bed_match.group(1)
+-        if bath_match:
+-            baths = bath_match.group(1)
+-        if sqft_match:
+-            sqft = sqft_match.group(1)
+-
+-        return {
+-            "found": True,
+-            "address": display_name,
+-            "price": price,
+-            "bedrooms": beds,
+-            "bathrooms": baths,
+-            "sqft": sqft,
+-            "description": description,
+-            "listing_type": "Unknown",
+-            "year_built": "N/A",
+-            "listing_url": full_url,
+-            "error": None,
+-        }
+-
+-    except Exception as exc:
+-        print(f"[listing_scraper] Redfin strategy failed: {exc}")
+-        return None
+-
+-
+-# ---------------------------------------------------------------------------
+-# Strategy 3: Google search
+-# ---------------------------------------------------------------------------
+-
+-
+-def _try_google_search(address: str) -> Optional[Dict]:
+-    """Search Google for listing info and parse snippets."""
+-    try:
+-        query = quote_plus(f"{address} zillow OR redfin listing beds baths")
+-        url = f"https://www.google.com/search?q={query}&num=5"
+-
+-        headers = {
+-            "User-Agent": _BROWSER_UA,
+-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+-            "Accept-Language": "en-US,en;q=0.9",
+-        }
+-
+-        resp = requests.get(url, headers=headers, timeout=_TIMEOUT)
+-        print(f"[listing_scraper] Google: {resp.status_code}")
+-
+-        if resp.status_code != 200:
+-            return None
+-
+-        soup = BeautifulSoup(resp.text, "html.parser")
+-
+-        # Collect all text snippets from the page
+-        all_text = []
+-        for tag in soup.find_all(["div", "span", "em"]):
+-            text = tag.get_text(" ", strip=True)
+-            if 20 < len(text) < 600:
+-                all_text.append(text)
+-
+-        # Find snippets containing property-like data
+-        best_snippet = ""
+-        price = "N/A"
+-        listing_url = ""
+-
+-        for text in all_text:
+-            # Look for price + bed/bath patterns
+-            has_beds = bool(re.search(r"\d+\s*(?:bed|bd|br)", text, re.IGNORECASE))
+-            has_baths = bool(re.search(r"\d+(?:\.\d+)?\s*(?:bath|ba)", text, re.IGNORECASE))
+-            has_price = bool(re.search(r"\$[\d,]+", text))
+-
+-            if (has_beds or has_baths) and len(text) > len(best_snippet):
+-                best_snippet = text
+-                pm = re.search(r"\$[\d,]+", text)
+-                if pm:
+-                    price = pm.group(0)
+-
+-        # Find listing URLs
+-        for link in soup.find_all("a"):
+-            href = link.get("href", "")
+-            if "zillow.com/homedetails" in href or "redfin.com" in href:
+-                listing_url = href
+-                break
+-
+-        if not best_snippet:
+-            return None
+-
+-        # Parse structured data
+-        beds = "N/A"
+-        baths = "N/A"
+-        sqft = "N/A"
+-
+-        bed_match = re.search(r"(\d+)\s*(?:bed|bd|bedroom|br)", best_snippet, re.IGNORECASE)
+-        bath_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:bath|ba|bathroom)", best_snippet, re.IGNORECASE)
+-        sqft_match = re.search(r"([\d,]+)\s*(?:sq\s*ft|sqft|square\s*feet|sf)", best_snippet, re.IGNORECASE)
+-
+-        if bed_match:
+-            beds = bed_match.group(1)
+-        if bath_match:
+-            baths = bath_match.group(1)
+-        if sqft_match:
+-            sqft = sqft_match.group(1)
+-
+-        return {
+-            "found": True,
+-            "address": address,
+-            "price": price,
+-            "bedrooms": beds,
+-            "bathrooms": baths,
+-            "sqft": sqft,
+-            "description": best_snippet,
+-            "listing_type": "Unknown",
+-            "year_built": "N/A",
+-            "listing_url": listing_url,
+-            "error": None,
+-        }
+-
+-    except Exception as exc:
+-        print(f"[listing_scraper] Google strategy failed: {exc}")
+-        return None
+-
+-
+-# ---------------------------------------------------------------------------
+-# Strategy 4: Zillow autocomplete basic (address verification only)
+-# ---------------------------------------------------------------------------
+-
+-
+-def _try_zillow_autocomplete_basic(address: str) -> Optional[Dict]:
+-    """Return whatever the Zillow autocomplete gives us (address verification)."""
+-    try:
+-        api_url = "https://www.zillowstatic.com/autocomplete/v3/suggestions"
+-        params = {"q": address, "resultTypes": "allAddress", "resultCount": 1}
+-        headers = {
+-            "User-Agent": _BROWSER_UA,
+-            "Referer": "https://www.zillow.com/",
+-            "Origin": "https://www.zillow.com",
+-        }
+-
+-        resp = requests.get(api_url, params=params, headers=headers, timeout=_TIMEOUT)
+-        if resp.status_code != 200:
+-            return None
+-
+-        data = resp.json()
+-        results = data.get("results", [])
+-        if not results:
+-            return None
+-
+-        first = results[0]
+-        display = first.get("display", "")
+-        meta = first.get("metaData", {})
+-
+-        if not display:
+-            return None
+-
+-        print(f"[listing_scraper] Autocomplete verified: {display}")
+-
+-        return {
+-            "found": True,
+-            "address": display,
+-            "price": "N/A",
+-            "bedrooms": "N/A",
+-            "bathrooms": "N/A",
+-            "sqft": "N/A",
+-            "description": f"Verified property listing at {display}",
+-            "listing_type": "Unknown",
+-            "year_built": "N/A",
+-            "listing_url": f"https://www.zillow.com/homedetails/{meta.get('zpid', '')}_zpid/",
+-            "error": None,
+-        }
+-
+-    except Exception as exc:
+-        print(f"[listing_scraper] Autocomplete basic failed: {exc}")
+-        return None
+-
+-
+-# ---------------------------------------------------------------------------
+-# Helpers
+-# ---------------------------------------------------------------------------
+-
+-
+-def _format_address_for_url(address: str) -> str:
+-    """Format an address string for URL patterns."""
+-    cleaned = re.sub(r"[,.\#\!]", "", address.strip())
+-    cleaned = re.sub(r"\s+", "-", cleaned)
+-    return cleaned
+-
+-
+-def _empty_result(address: str, error: str = "") -> Dict[str, Any]:
+-    """Return an empty result dict with error info."""
+-    return {
+-        "found": False,
+-        "address": address,
+-        "price": "N/A",
+-        "bedrooms": "N/A",
+-        "bathrooms": "N/A",
+-        "sqft": "N/A",
+-        "description": "",
+-        "listing_type": "Unknown",
+-        "year_built": "N/A",
+-        "listing_url": "",
+-        "error": error,
+-    }
+diff --git a/backend/modules/tts_engine.py b/backend/modules/tts_engine.py
+index b62bf5d..07b35f2 100644
+--- a/backend/modules/tts_engine.py
++++ b/backend/modules/tts_engine.py
+@@ -17,6 +17,7 @@ import base64
+ import json
+ import os
+ from io import BytesIO
++from typing import Optional
+ 
+ def _generate_natural_language(report: dict) -> str:
+     """Converts a structured risk report into a natural language string.
+@@ -36,7 +37,7 @@ def _generate_natural_language(report: dict) -> str:
+     
+     # Try using Gemini to generate a conversational, empathetic warning
+     try:
+-        from modules.agent_reasoner import _get_model
++        from modules.agent_reasoner import _get_model  # type: ignore
+         model = _get_model()
+         
+         if model:
+@@ -62,7 +63,7 @@ def _generate_natural_language(report: dict) -> str:
+     else:
+         return base_message
+ 
+-def generate_chat_response(transcription: str, context: dict = None) -> str:
++def generate_chat_response(transcription: str, context: Optional[dict] = None) -> str:
+     """Generates a conversational response to a user's question during post-call chat.
+     
+     Args:
+@@ -73,7 +74,7 @@ def generate_chat_response(transcription: str, context: dict = None) -> str:
+         str: A conversational textual response from the agent.
+     """
+     try:
+-        from modules.agent_reasoner import _get_model
++        from modules.agent_reasoner import _get_model  # type: ignore
+         model = _get_model()
+         
+         if model:
+@@ -114,7 +115,7 @@ def generate_warning_audio(text_or_report) -> str:
+ 
+     # Attempt Option 2: Google Cloud TTS (if credentials exist)
+     try:
+-        from google.cloud import texttospeech
++        from google.cloud import texttospeech  # type: ignore
+         
+         # This requires GOOGLE_APPLICATION_CREDENTIALS to be set in the environment
+         client = texttospeech.TextToSpeechClient()
+@@ -144,7 +145,7 @@ def generate_warning_audio(text_or_report) -> str:
+         
+         # Fallback Option 1: gTTS (MVP)
+         try:
+-            from gtts import gTTS
++            from gtts import gTTS  # type: ignore
+             import tempfile
+             
+             tts = gTTS(text=text_to_speak, lang="en", slow=False)
+diff --git a/backend/modules/voice_agent.py b/backend/modules/voice_agent.py
+index ce957d5..a7147e6 100644
+--- a/backend/modules/voice_agent.py
++++ b/backend/modules/voice_agent.py
+@@ -2,8 +2,8 @@ import asyncio
+ import json
+ import traceback
+ from typing import AsyncGenerator
+-from vertexai.generative_models import GenerativeModel, Part
+-from modules.tts_engine import generate_warning_audio
++from vertexai.generative_models import GenerativeModel, Part  # type: ignore[import]
++from modules.tts_engine import generate_warning_audio  # type: ignore[import]
+ 
+ model = GenerativeModel("gemini-2.5-flash")
+ 
+@@ -18,7 +18,7 @@ async def stream_voice_chat(
+     Yields text and audio data back to the websocket.
+     """
+     # Build a simple history string
+-    history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-10:]])
++    history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-10:]])  # type: ignore
+     
+     prompt = (
+         f"You are TrustKit, a senior real estate fraud investigator. "
+@@ -43,32 +43,34 @@ async def stream_voice_chat(
+             stream=True
+         )
+         
+-        sentence_buffer = ""
++        sentence_buffer_list: list[str] = []
+         async for chunk in response_stream:
+             if interrupt_event.is_set():
+                 print("[voice_agent] 🛑 Generation interrupted by user.")
+                 break
+                 
+-            text = getattr(chunk, "text", "")
++            text: str = str(getattr(chunk, "text", ""))
+             if not text:
+                 continue
+                 
+             # Yield text chunks immediately so the UI chat log updates live
+             yield {"type": "chat_reply", "message": text}
+             
+-            sentence_buffer += text
++            sentence_buffer_list.append(text)
+             
+             # Simple chunking for TTS: Wait for punctuation to submit to TTS engine
+-            if any(punc in sentence_buffer for punc in ['.', '!', '?', '\n']):
+-                clean_sentence = sentence_buffer.strip()
++            joined_sentence = "".join(sentence_buffer_list)
++            if any(punc in joined_sentence for punc in ['.', '!', '?', '\n']):
++                clean_sentence = joined_sentence.strip()
+                 if clean_sentence:
+                     audio_b64 = await asyncio.to_thread(generate_warning_audio, clean_sentence)
+                     if audio_b64 and not interrupt_event.is_set():
+                         yield {"type": "chat_reply", "audio_data": audio_b64}
+-                sentence_buffer = ""
++                sentence_buffer_list.clear()
+                 
+         # Send any remaining text to TTS
+-        clean_sentence = sentence_buffer.strip()
++        joined_sentence = "".join(sentence_buffer_list)
++        clean_sentence = joined_sentence.strip()
+         if clean_sentence and not interrupt_event.is_set():
+             audio_b64 = await asyncio.to_thread(generate_warning_audio, clean_sentence)
+             if audio_b64:
+diff --git a/backend/modules/zillow_scraper.py b/backend/modules/zillow_scraper.py
+deleted file mode 100644
+index 3146f0a..0000000
+--- a/backend/modules/zillow_scraper.py
++++ /dev/null
+@@ -1,266 +0,0 @@
+-"""TrustKit AI — Zillow Listing Scraper Module.
+-
+-Searches Zillow by property address and extracts listing data
+-including photos, price, and description for comparison against
+-uploaded video frames.
+-"""
+-
+-import json
+-import re
+-import requests
+-from typing import Optional
+-from urllib.parse import quote
+-
+-
+-# Realistic browser headers to avoid anti-bot blocking
+-_HEADERS = {
+-    "User-Agent": (
+-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+-        "AppleWebKit/537.36 (KHTML, like Gecko) "
+-        "Chrome/120.0.0.0 Safari/537.36"
+-    ),
+-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+-    "Accept-Language": "en-US,en;q=0.9",
+-    "Accept-Encoding": "gzip, deflate, br",
+-    "DNT": "1",
+-    "Connection": "keep-alive",
+-    "Upgrade-Insecure-Requests": "1",
+-    "Sec-Fetch-Dest": "document",
+-    "Sec-Fetch-Mode": "navigate",
+-    "Sec-Fetch-Site": "none",
+-    "Sec-Fetch-User": "?1",
+-}
+-
+-
+-def _address_to_zillow_slug(address: str) -> str:
+-    """Convert a human-readable address to a Zillow URL slug.
+-    
+-    Example: '123 Main St, New York, NY 10001' -> '123-Main-St-New-York-NY-10001'
+-    """
+-    # Remove special characters and replace spaces/commas with hyphens
+-    slug = re.sub(r'[,#\.\']', '', address)
+-    slug = re.sub(r'\s+', '-', slug.strip())
+-    return slug
+-
+-
+-def search_by_address(address: str) -> dict:
+-    """Search Zillow for a property by address and extract listing details.
+-    
+-    Args:
+-        address: A human-readable address string, e.g.
+-                 '123 Main St, New York, NY 10001'
+-    
+-    Returns:
+-        A dict with keys:
+-            - address (str)
+-            - price (str)
+-            - beds (str)
+-            - baths (str)
+-            - sqft (str)
+-            - description (str)
+-            - photo_urls (list[str])
+-            - photos_bytes (list[bytes]) — downloaded photo images
+-            - source (str) — 'zillow' or 'mock'
+-    """
+-    slug = _address_to_zillow_slug(address)
+-    url = f"https://www.zillow.com/homes/{slug}_rb/"
+-    
+-    print(f"[zillow_scraper] Searching: {url}")
+-    
+-    try:
+-        resp = requests.get(url, headers=_HEADERS, timeout=15)
+-        resp.raise_for_status()
+-        html = resp.text
+-        
+-        # Try to extract __NEXT_DATA__ JSON
+-        listing = _extract_next_data(html)
+-        if listing:
+-            # Download photos
+-            photos_bytes = _download_photos(listing.get("photo_urls", []), max_photos=5)
+-            listing["photos_bytes"] = photos_bytes
+-            listing["source"] = "zillow"
+-            print(f"[zillow_scraper] Found listing with {len(listing.get('photo_urls', []))} photos")
+-            return listing
+-        
+-        # Try alternate extraction from HTML meta tags
+-        listing = _extract_from_meta(html, address)
+-        if listing:
+-            photos_bytes = _download_photos(listing.get("photo_urls", []), max_photos=5)
+-            listing["photos_bytes"] = photos_bytes
+-            listing["source"] = "zillow"
+-            print(f"[zillow_scraper] Extracted from meta tags: {len(listing.get('photo_urls', []))} photos")
+-            return listing
+-            
+-    except Exception as e:
+-        print(f"[zillow_scraper] Scrape failed: {e}")
+-    
+-    # Fallback: return mock listing data
+-    print("[zillow_scraper] Using mock listing data as fallback")
+-    return _mock_listing(address)
+-
+-
+-def _extract_next_data(html: str) -> Optional[dict]:
+-    """Extract listing data from Zillow's __NEXT_DATA__ JSON blob."""
+-    try:
+-        match = re.search(
+-            r'<script\s+id="__NEXT_DATA__"\s+type="application/json">(.*?)</script>',
+-            html, re.DOTALL
+-        )
+-        if not match:
+-            return None
+-        
+-        data = json.loads(match.group(1))
+-        
+-        # Navigate the JSON tree to find property data
+-        # Zillow's structure can vary, so we try multiple paths
+-        props = data.get("props", {}).get("pageProps", {})
+-        
+-        # Try componentProps path
+-        comp = props.get("componentProps", {})
+-        gdp = comp.get("gdpClientCache", "")
+-        
+-        if gdp:
+-            # gdpClientCache is often a JSON string itself
+-            try:
+-                cache = json.loads(gdp) if isinstance(gdp, str) else gdp
+-                # Get the first property in the cache
+-                for key, value in cache.items():
+-                    prop = value.get("property", {})
+-                    if prop:
+-                        return _parse_property(prop)
+-            except (json.JSONDecodeError, AttributeError):
+-                pass
+-        
+-        # Try initialData path
+-        initial = props.get("initialData", {})
+-        building = initial.get("building", {})
+-        if building:
+-            return _parse_property(building)
+-
+-        # Try searchPageState path (search results page)
+-        search = props.get("searchPageState", {})
+-        results = search.get("cat1", {}).get("searchResults", {}).get("listResults", [])
+-        if results:
+-            first = results[0]
+-            return {
+-                "address": first.get("address", ""),
+-                "price": first.get("price", "N/A"),
+-                "beds": str(first.get("beds", "N/A")),
+-                "baths": str(first.get("baths", "N/A")),
+-                "sqft": str(first.get("area", "N/A")),
+-                "description": first.get("statusText", ""),
+-                "photo_urls": [first.get("imgSrc", "")] if first.get("imgSrc") else [],
+-            }
+-            
+-    except Exception as e:
+-        print(f"[zillow_scraper] __NEXT_DATA__ extraction failed: {e}")
+-    
+-    return None
+-
+-
+-def _parse_property(prop: dict) -> dict:
+-    """Parse a Zillow property dict into our standard format."""
+-    # Extract photo URLs
+-    photo_urls = []
+-    media = prop.get("responsivePhotos", []) or prop.get("photos", [])
+-    for item in media:
+-        if isinstance(item, dict):
+-            # responsivePhotos format
+-            sources = item.get("mixedSources", {}).get("jpeg", [])
+-            if sources:
+-                # Get the highest resolution
+-                best = max(sources, key=lambda x: x.get("width", 0))
+-                photo_urls.append(best.get("url", ""))
+-            elif item.get("url"):
+-                photo_urls.append(item["url"])
+-    
+-    # Fallback: try hugePhotos
+-    if not photo_urls:
+-        huge = prop.get("hugePhotos", [])
+-        for item in huge:
+-            if isinstance(item, dict) and item.get("url"):
+-                photo_urls.append(item["url"])
+-    
+-    return {
+-        "address": prop.get("address", {}).get("streetAddress", "") if isinstance(prop.get("address"), dict) else str(prop.get("address", "")),
+-        "price": str(prop.get("price", "N/A")),
+-        "beds": str(prop.get("bedrooms", prop.get("beds", "N/A"))),
+-        "baths": str(prop.get("bathrooms", prop.get("baths", "N/A"))),
+-        "sqft": str(prop.get("livingArea", prop.get("area", "N/A"))),
+-        "description": prop.get("description", "No description available."),
+-        "photo_urls": photo_urls[:10],  # Cap at 10
+-    }
+-
+-
+-def _extract_from_meta(html: str, address: str) -> Optional[dict]:
+-    """Fallback: extract basic listing info from HTML meta tags and OG data."""
+-    try:
+-        photo_urls = []
+-        
+-        # Extract OG images
+-        og_images = re.findall(r'<meta\s+property="og:image"\s+content="([^"]+)"', html)
+-        photo_urls.extend(og_images)
+-        
+-        # Extract any other listing images
+-        img_matches = re.findall(r'https://photos\.zillowstatic\.com/fp/[a-zA-Z0-9_-]+\.jpg', html)
+-        for url in img_matches:
+-            if url not in photo_urls:
+-                photo_urls.append(url)
+-        
+-        if not photo_urls:
+-            return None
+-        
+-        # Get description from meta
+-        desc_match = re.search(r'<meta\s+name="description"\s+content="([^"]*)"', html)
+-        description = desc_match.group(1) if desc_match else "No description available."
+-        
+-        # Price
+-        price_match = re.search(r'\$[\d,]+', html)
+-        price = price_match.group(0) if price_match else "N/A"
+-        
+-        return {
+-            "address": address,
+-            "price": price,
+-            "beds": "N/A",
+-            "baths": "N/A",
+-            "sqft": "N/A",
+-            "description": description,
+-            "photo_urls": photo_urls[:10],
+-        }
+-    except Exception:
+-        return None
+-
+-
+-def _download_photos(urls: list, max_photos: int = 5) -> list:
+-    """Download listing photos as bytes."""
+-    photos = []
+-    for url in urls[:max_photos]:
+-        try:
+-            if not url:
+-                continue
+-            resp = requests.get(url, headers=_HEADERS, timeout=10)
+-            resp.raise_for_status()
+-            photos.append(resp.content)
+-        except Exception as e:
+-            print(f"[zillow_scraper] Failed to download photo: {e}")
+-    return photos
+-
+-
+-def _mock_listing(address: str) -> dict:
+-    """Return a mock listing when Zillow scraping fails."""
+-    return {
+-        "address": address,
+-        "price": "$2,500/mo",
+-        "beds": "2",
+-        "baths": "1",
+-        "sqft": "850",
+-        "description": (
+-            "Spacious 2-bedroom apartment in a prime location. "
+-            "Features hardwood floors, updated kitchen with stainless steel appliances, "
+-            "large windows with natural light, and in-unit washer/dryer. "
+-            "Building amenities include a fitness center and rooftop terrace."
+-        ),
+-        "photo_urls": [],
+-        "photos_bytes": [],
+-        "source": "mock",
+-    }
